@@ -7,6 +7,7 @@ TURSO_AUTH_TOKEN to use the remote Turso/libSQL database in deployment.
 
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -15,21 +16,27 @@ def env_list(name, default=""):
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() in {"1", "true", "yes"}
-SECRET_KEY = os.getenv(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-local-development-only-change-before-deploying",
-)
+IS_VERCEL = bool(os.getenv("VERCEL"))
+DEBUG = os.getenv("DJANGO_DEBUG", "false" if IS_VERCEL else "true").lower() in {
+    "1", "true", "yes"
+}
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY must be set when DEBUG is disabled."
+        )
+    SECRET_KEY = "django-insecure-local-development-only-change-before-deploying"
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-# Vercel assigns *.vercel.app hostnames to preview and production deployments.
-if os.getenv("VERCEL"):
-    ALLOWED_HOSTS.append(".vercel.app")
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    ".vercel.app" if IS_VERCEL else "localhost,127.0.0.1",
+)
 if os.getenv("VERCEL_URL"):
     ALLOWED_HOSTS.append(os.environ["VERCEL_URL"].split(":")[0])
 
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
-if os.getenv("VERCEL"):
+if IS_VERCEL:
     CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
 
 INSTALLED_APPS = [
@@ -86,8 +93,12 @@ if TURSO_DB_URL and TURSO_AUTH_TOKEN:
         }
     }
 elif TURSO_DB_URL or TURSO_AUTH_TOKEN:
-    raise RuntimeError(
+    raise ImproperlyConfigured(
         "Set both TURSO_DB_URL and TURSO_AUTH_TOKEN, or neither for local SQLite."
+    )
+elif IS_VERCEL:
+    raise ImproperlyConfigured(
+        "TURSO_DB_URL and TURSO_AUTH_TOKEN are required for Vercel deployment."
     )
 else:
     DATABASES = {
