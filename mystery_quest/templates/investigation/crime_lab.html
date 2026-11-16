@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Forensic Crime Lab – Mystery Quest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <span class="badge bg-warning text-dark text-uppercase fw-bold mb-1">
+                <i class="bi bi-cpu-fill me-1"></i> Advanced Forensics Division
+            </span>
+            <h2 class="text-light mb-0" style="font-family: 'Cinzel', serif;">BUREAU CRIME LAB & DECRYPTION STATION</h2>
+            <p class="text-muted small mb-0">Interactive forensic analysis station: decrypt coded ciphers, analyze chemical toxins, and compare latent fingerprints.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'case_list' %}" class="btn btn-outline-gold btn-sm">
+                <i class="bi bi-briefcase me-1"></i> Active Cases
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-house me-1"></i> Headquarters
+            </a>
+        </div>
+    </div>
+
+    <!-- Forensic Tools Workspace Tabs -->
+    <div class="card card-detective overflow-hidden mb-4">
+        <ul class="nav nav-tabs investigation-tabs p-2 border-bottom border-secondary" id="crimeLabTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="cipher-tab" data-bs-toggle="tab" data-bs-target="#cipher-pane" type="button" role="tab">
+                    <i class="bi bi-key-fill text-warning me-1"></i> 1. Cipher & Cryptogram Decryptor
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="toxin-tab" data-bs-toggle="tab" data-bs-target="#toxin-pane" type="button" role="tab">
+                    <i class="bi bi-droplet-half text-info me-1"></i> 2. Chemical & Toxin Spectrometer
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="fingerprint-tab" data-bs-toggle="tab" data-bs-target="#fingerprint-pane" type="button" role="tab">
+                    <i class="bi bi-fingerprint text-danger me-1"></i> 3. Latent Fingerprint Matcher
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content p-4" id="crimeLabTabContent">
+            
+            <!-- TOOL 1: CIPHER DECRYPTOR -->
+            <div class="tab-pane fade show active" id="cipher-pane" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card card-detective p-4 h-100">
+                            <h5 class="text-light fw-bold mb-2">Encrypted Cipher Input</h5>
+                            <p class="text-muted small mb-3">Paste ciphertext recovered from crime scenes or load a case evidence cipher preset:</p>
+
+                            <!-- Presets -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="loadPreset('boreas')">
+                                    <i class="bi bi-file-earmark-code me-1"></i> Case #02 Boreas Note
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="loadPreset('orsini')">
+                                    <i class="bi bi-broadcast-pin me-1"></i> Case #05 Wire Code
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light" onclick="loadPreset('mirror')">
+                                    <i class="bi bi-arrow-left-right me-1"></i> Mirror Cipher
+                                </button>
+                            </div>
+
+                            <div class="mb-3">
+                                <textarea id="cipherInput" class="form-control bg-dark text-warning font-monospace border-secondary" rows="5" placeholder="Enter encrypted text or select a case preset above..."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-light small fw-bold d-flex justify-content-between">
+                                    <span>Caesar Shift Key: <strong id="shiftValBadge" class="text-warning">1</strong></span>
+                                    <span class="text-dim small">Range: -25 to +25</span>
+                                </label>
+                                <input type="range" class="form-range" id="shiftRange" min="-25" max="25" value="1">
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-gold btn-sm" onclick="decodeCaesar()">
+                                    <i class="bi bi-unlock-fill me-1"></i> Decrypt Caesar
+                                </button>
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="decodeBase64()">
+                                    <i class="bi bi-binary me-1"></i> Base64 Decode
+                                </button>
+                                <button type="button" class="btn btn-outline-light btn-sm" onclick="reverseCipher()">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Invert / Reverse
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearCipher()">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card card-detective p-4 h-100 border-success border-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="text-success fw-bold mb-0">Decoded Plaintext Output</h5>
+                                <span id="cipherTypeBadge" class="badge bg-dark border border-success text-success">Standby</span>
+                            </div>
+                            <p class="text-muted small mb-3">Live decrypted intelligence extracted by the Bureau cryptographic engine:</p>
+
+                            <div class="p-3 rounded bg-dark border border-secondary font-monospace text-light flex-grow-1" style="min-height: 160px; font-size: 1rem; line-height: 1.6;" id="cipherOutput">
+                                [Awaiting cryptographic processing...]
+                            </div>
+
+                            <div id="cipherVerdictAlert" class="alert alert-dark border-secondary small mt-3 mb-0 text-muted">
+                                <i class="bi bi-info-circle text-warning me-1"></i> Decrypted transcripts can be entered into your investigative notes in the Crime Room.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOL 2: CHEMICAL TOXIN SPECTROMETER -->
+            <div class="tab-pane fade" id="toxin-pane" role="tabpanel">
+                <div class="mb-3">
+                    <h5 class="text-light fw-bold mb-1">Crime Scene Toxicological Database</h5>
+                    <p class="text-muted small mb-0">Spectrometric analysis of synthetic poisons, industrial residues, and trace chemicals found in active dockets.</p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Compound 1 -->
+                    <div class="col-md-4">
+                        <div class="card card-detective p-3 h-100 border-danger border-opacity-50">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-danger fw-bold mb-0"><i class="bi bi-radioactive me-1"></i> Wolfsbane (Aconitine)</h6>
+                                <span class="badge bg-danger">Lethal Neurotoxin</span>
+                            </div>
+                            <div class="font-monospace text-warning small mb-2">Formula: C34H47NO11</div>
+                            <p class="text-muted small mb-3">
+                                Potent plant alkaloid targeting voltage-gated sodium channels. Causes immediate arrhythmia and respiratory paralysis.
+                            </p>
+                            <div class="p-2 rounded bg-dark border border-secondary small text-light mb-3">
+                                <strong>Case Correlation:</strong><br>
+                                <span class="text-warning">Case #02: The Poisoned Cryptographer</span><br>
+                                Found in Earl Grey tea. Synthesized in biochemistry laboratory.
+                            </div>
+                            <span class="badge bg-dark border border-secondary text-dim">Controlled Schedule 1 Substance</span>
+                        </div>
+                    </div>
+
+                    <!-- Compound 2 -->
+                    <div class="col-md-4">
+                        <div class="card card-detective p-3 h-100 border-warning border-opacity-50">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-warning fw-bold mb-0"><i class="bi bi-fire me-1"></i> Potassium Nitrate & Sulfur</h6>
+                                <span class="badge bg-warning text-dark">Pyrotechnic Smoke</span>
+                            </div>
+                            <div class="font-monospace text-warning small mb-2">Formula: KNO3 + S + C</div>
+                            <p class="text-muted small mb-3">
+                                Classic deflagrating composition used in smoke flares. Leaves distinctive sulfurous crystalline residue on clothing fibers.
+                            </p>
+                            <div class="p-2 rounded bg-dark border border-secondary small text-light mb-3">
+                                <strong>Case Correlation:</strong><br>
+                                <span class="text-warning">Case #05: The Venetian Masquerade</span><br>
+                                Recovered from gold Harlequin ribbon and ambassador salon.
+                            </div>
+                            <span class="badge bg-dark border border-secondary text-dim">Commercial Pyrotechnic Trace</span>
+                        </div>
+                    </div>
+
+                    <!-- Compound 3 -->
+                    <div class="col-md-4">
+                        <div class="card card-detective p-3 h-100 border-info border-opacity-50">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-info fw-bold mb-0"><i class="bi bi-droplet-fill me-1"></i> Refined Whale-Oil Lubricant</h6>
+                                <span class="badge bg-info text-dark">Industrial Lubricant</span>
+                            </div>
+                            <div class="font-monospace text-warning small mb-2">Formula: Cetyl Palmitate Ester</div>
+                            <p class="text-muted small mb-3">
+                                Rare high-viscosity horological lubricant synthesized specifically for delicate clockwork and automaton differential gears.
+                            </p>
+                            <div class="p-2 rounded bg-dark border border-secondary small text-light mb-3">
+                                <strong>Case Correlation:</strong><br>
+                                <span class="text-warning">Case #04: Curse of the Clockwork Automaton</span><br>
+                                Found smeared across Victor Vance's carriage upholstery.
+                            </div>
+                            <span class="badge bg-dark border border-secondary text-dim">Specialized Watchmaking Oil</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOL 3: FINGERPRINT MATCHER -->
+            <div class="tab-pane fade" id="fingerprint-pane" role="tabpanel">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-6">
+                        <div class="card card-detective p-4">
+                            <h5 class="text-light fw-bold mb-2">Latent Ridge Comparison Engine</h5>
+                            <p class="text-muted small mb-4">Select recovered latent print from evidence lockers and compare ridge bifurcations against suspect database files:</p>
+
+                            <div class="mb-3">
+                                <label class="form-label text-light small fw-bold">1. Select Recovered Crime Scene Trace:</label>
+                                <select id="fpEvidenceSelect" class="form-select bg-dark text-light border-secondary">
+                                    <option value="julian_rf">Case #01: Thumbprint on RF Safe Cloner Casing</option>
+                                    <option value="silas_cigar">Case #03: Print on Brass Lockpick Tension Wrench</option>
+                                    <option value="victor_tool">Case #04: Grip Print on Counter-Threaded Spanner</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label text-light small fw-bold">2. Suspect Reference Record to Match:</label>
+                                <select id="fpSuspectSelect" class="form-select bg-dark text-light border-secondary">
+                                    <option value="julian">Julian Harrington (Estranged Nephew)</option>
+                                    <option value="james">James Sterling (Butler)</option>
+                                    <option value="victoria">Victoria Ashford (Appraiser)</option>
+                                    <option value="silas">Silas Vance (Antiquarian)</option>
+                                    <option value="victor">Victor Vance (Rival Inventor)</option>
+                                </select>
+                            </div>
+
+                            <button type="button" class="btn btn-gold w-100 fw-bold" onclick="compareFingerprints()">
+                                <i class="bi bi-search me-1"></i> Run Biometric Comparison Analysis
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card card-detective p-4 text-center border-secondary" id="fpResultCard">
+                            <div class="suspect-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.2rem;">
+                                <i class="bi bi-fingerprint text-warning" id="fpIcon"></i>
+                            </div>
+                            <h5 class="text-light fw-bold mb-1" id="fpHeadline">Biometric Scanner Ready</h5>
+                            <p class="text-muted small mb-3" id="fpSubtext">Execute comparison to calculate Galton ridge match score.</p>
+                            
+                            <div class="p-3 rounded bg-dark border border-secondary mb-3 d-none" id="fpScoreBox">
+                                <div class="text-muted small text-uppercase mb-1">Match Confidence:</div>
+                                <h2 class="fw-bold mb-0 text-success" id="fpScorePercent">99.4%</h2>
+                                <span class="badge bg-success mt-2" id="fpMatchBadge">POSITIVE MATCH</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 1. Cipher Decryption Logic
+function loadPreset(type) {
+    const input = document.getElementById('cipherInput');
+    const range = document.getElementById('shiftRange');
+    const badge = document.getElementById('shiftValBadge');
+
+    if (type === 'boreas') {
+        // Caesar shift of 1: "FS-901: Qspupdpm Csfbchfe. Nffu jo mbcpsbupsz 8:15 QN" -> "ER-901: Protocol Breached. Meet in laboratory 8:15 PM"
+        input.value = "FS-901: Qspupdpm Csfbchfe. Nffu jo mbcpsbupsz 8:15 QN";
+        range.value = -1;
+        badge.textContent = "-1";
+        decodeCaesar();
+    } else if (type === 'orsini') {
+        input.value = "VHJlYXR5IHNlY3VyZWQuIFRyYW5zZmVyIGZ1bmRzIHRvIEJhbmNvIGRpIFNhbiBNYXJjby4=";
+        decodeBase64();
+    } else if (type === 'mirror') {
+        input.value = ".elcitrap drah htiw ssalg kcip ylluferac :edoc retsehC";
+        reverseCipher();
+    }
+}
+
+document.getElementById('shiftRange').addEventListener('input', (e) => {
+    document.getElementById('shiftValBadge').textContent = e.target.value;
+    decodeCaesar();
+});
+
+function decodeCaesar() {
+    const text = document.getElementById('cipherInput').value;
+    const shift = parseInt(document.getElementById('shiftRange').value, 10);
+    const output = document.getElementById('cipherOutput');
+    const typeBadge = document.getElementById('cipherTypeBadge');
+
+    if (!text) {
+        output.textContent = "[No ciphertext provided]";
+        return;
+    }
+
+    let result = "";
+    for (let i = 0; i < text.length; i++) {
+        let c = text.charCodeAt(i);
+        if (c >= 65 && c <= 90) {
+            result += String.fromCharCode(((c - 65 + shift + 260) % 26) + 65);
+        } else if (c >= 97 && c <= 122) {
+            result += String.fromCharCode(((c - 97 + shift + 260) % 26) + 97);
+        } else {
+            result += text.charAt(i);
+        }
+    }
+
+    typeBadge.className = "badge bg-dark border border-warning text-warning";
+    typeBadge.textContent = `Caesar Shift (${shift > 0 ? '+' + shift : shift})`;
+    output.textContent = result;
+}
+
+function decodeBase64() {
+    const text = document.getElementById('cipherInput').value.trim();
+    const output = document.getElementById('cipherOutput');
+    const typeBadge = document.getElementById('cipherTypeBadge');
+
+    try {
+        const decoded = atob(text);
+        typeBadge.className = "badge bg-dark border border-info text-info";
+        typeBadge.textContent = "Base64 Decoded";
+        output.textContent = decoded;
+    } catch(e) {
+        typeBadge.className = "badge bg-danger";
+        typeBadge.textContent = "Base64 Error";
+        output.textContent = "Error: Input string is not valid Base64 encoded data.";
+    }
+}
+
+function reverseCipher() {
+    const text = document.getElementById('cipherInput').value;
+    const output = document.getElementById('cipherOutput');
+    const typeBadge = document.getElementById('cipherTypeBadge');
+
+    typeBadge.className = "badge bg-dark border border-light text-light";
+    typeBadge.textContent = "Mirror Inversion";
+    output.textContent = text.split('').reverse().join('');
+}
+
+function clearCipher() {
+    document.getElementById('cipherInput').value = "";
+    document.getElementById('cipherOutput').textContent = "[Awaiting cryptographic processing...]";
+    document.getElementById('cipherTypeBadge').textContent = "Standby";
+}
+
+// 2. Fingerprint Comparator Logic
+function compareFingerprints() {
+    const ev = document.getElementById('fpEvidenceSelect').value;
+    const susp = document.getElementById('fpSuspectSelect').value;
+    const scoreBox = document.getElementById('fpScoreBox');
+    const headline = document.getElementById('fpHeadline');
+    const subtext = document.getElementById('fpSubtext');
+    const score = document.getElementById('fpScorePercent');
+    const badge = document.getElementById('fpMatchBadge');
+
+    scoreBox.classList.remove('d-none');
+
+    let isMatch = false;
+    let matchPct = 12.4;
+
+    if (ev === 'julian_rf' && susp === 'julian') {
+        isMatch = true; matchPct = 99.8;
+    } else if (ev === 'silas_cigar' && susp === 'silas') {
+        isMatch = true; matchPct = 99.2;
+    } else if (ev === 'victor_tool' && susp === 'victor') {
+        isMatch = true; matchPct = 98.7;
+    } else {
+        matchPct = (Math.random() * 20 + 5).toFixed(1);
+    }
+
+    score.textContent = `${matchPct}%`;
+
+    if (isMatch) {
+        score.className = "fw-bold mb-0 text-success";
+        badge.className = "badge bg-success mt-2";
+        badge.textContent = "CONCLUSIVE BIOMETRIC MATCH";
+        headline.textContent = "Positive Ridge Identification!";
+        headline.className = "text-success fw-bold mb-1";
+        subtext.textContent = "16 distinct Galton minutiae points confirmed between scene evidence and suspect file.";
+    } else {
+        score.className = "fw-bold mb-0 text-danger";
+        badge.className = "badge bg-danger mt-2";
+        badge.textContent = "EXCLUSION / NO MATCH";
+        headline.textContent = "Negative Biometric Correlation";
+        headline.className = "text-danger fw-bold mb-1";
+        subtext.textContent = "Ridge arches and delta cores do not correspond. Suspect print excluded for this trace.";
+    }
+}
+</script>
+{% endblock %}

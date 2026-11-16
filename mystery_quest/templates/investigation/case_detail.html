@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ case.title }} – Dossier Briefing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Headquarters</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'case_list' %}">Case Files</a></li>
+            <li class="breadcrumb-item active text-warning" aria-current="page">{{ case.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Main Dossier Info -->
+        <div class="col-lg-8">
+            <div class="card card-detective p-4 mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <span class="badge {% if case.difficulty == 'Easy' %}badge-diff-easy{% elif case.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %} fs-6">
+                        {{ case.difficulty }} Difficulty ({{ case.base_points }} pts)
+                    </span>
+                    <span class="badge bg-dark border border-secondary text-muted">Case ID: #{{ case.id|stringformat:"04d" }}</span>
+                </div>
+
+                <h2 class="text-light fw-bold mb-3" style="font-family: 'Cinzel', serif;">{{ case.title }}</h2>
+
+                <h6 class="text-warning text-uppercase fw-bold mt-3 mb-2">Executive Incident Brief</h6>
+                <p class="text-light lead fs-6 mb-4">{{ case.description }}</p>
+
+                <h6 class="text-warning text-uppercase fw-bold mb-2">Lore, Setting & Scene Background</h6>
+                <div class="p-3 rounded bg-dark border border-secondary mb-4 text-muted small" style="line-height: 1.7;">
+                    {{ case.background|linebreaks }}
+                </div>
+
+                <!-- Call to Action -->
+                <div class="d-flex flex-wrap gap-3 align-items-center pt-3 border-top border-secondary">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'start_investigation' case.id %}" class="btn btn-gold btn-lg px-4">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            {% if progress %}Resume Investigation{% else %}Commence Investigation{% endif %}
+                        </a>
+                        {% if progress %}
+                        <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-outline-danger">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Dossier
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'login' %}?next={% url 'case_detail' case.id %}" class="btn btn-gold btn-lg px-4">
+                            <i class="bi bi-lock-fill me-2"></i> Login to Investigate
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Suspects & Clues Recon -->
+        <div class="col-lg-4">
+            <!-- Recon Stats -->
+            <div class="card card-detective p-4 mb-4">
+                <h6 class="text-warning text-uppercase fw-bold mb-3">Investigation Docket</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                        <span class="text-muted"><i class="bi bi-people me-2 text-warning"></i> Suspects Profiled</span>
+                        <span class="fw-bold text-light">{{ suspects_count }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                        <span class="text-muted"><i class="bi bi-search me-2 text-info"></i> Physical / Digital Clues</span>
+                        <span class="fw-bold text-light">{{ clues_count }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                        <span class="text-muted"><i class="bi bi-chat-quote me-2 text-success"></i> Witness Statements</span>
+                        <span class="fw-bold text-light">{{ case.witness_statements.count }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-2">
+                        <span class="text-muted"><i class="bi bi-award me-2 text-danger"></i> Base Reward</span>
+                        <span class="fw-bold text-warning">{{ case.base_points }} pts</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Suspects Preview -->
+            <div class="card card-detective p-4">
+                <h6 class="text-warning text-uppercase fw-bold mb-3">Prime Suspects on File</h6>
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for suspect in case.suspects.all %}
+                    <div class="list-group-item bg-transparent border-secondary text-light px-0 py-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="suspect-avatar" style="width: 40px; height: 40px; font-size: 1rem;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ suspect.name }}</h6>
+                                <span class="small text-muted">{{ suspect.profile|truncatewords:6 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No suspects cataloged.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

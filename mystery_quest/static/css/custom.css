@@ -1,0 +1,454 @@
+/* ==========================================================================
+   Mystery Quest – Detective Investigation Web Application
+   Custom Theme: Deep Noir Navy, Midnight Slate & Vintage Gold
+   High Contrast & Accessibility Optimized
+   ========================================================================== */
+
+:root {
+  --mq-bg-darkest: #070b12;
+  --mq-bg-darker: #0c121e;
+  --mq-bg-card: #111a2d;
+  --mq-bg-card-hover: #16223b;
+  --mq-border-color: #2b3d5c;
+  --mq-border-gold: rgba(245, 158, 11, 0.6);
+  
+  --mq-gold: #f59e0b;
+  --mq-gold-light: #fbbf24;
+  --mq-gold-dark: #b45309;
+  --mq-gold-glow: rgba(245, 158, 11, 0.35);
+
+  --mq-text-main: #f8fafc;
+  --mq-text-muted: #cbd5e1;
+  --mq-text-dim: #94a3b8;
+
+  --mq-success: #10b981;
+  --mq-danger: #ef4444;
+  --mq-info: #0ea5e9;
+}
+
+body {
+  background-color: var(--mq-bg-darkest);
+  color: var(--mq-text-main);
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* ==========================================================================
+   Headings & Links
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+a {
+  color: var(--mq-gold-light);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   TABLES: SOLID BLACK TEXT ON CLEAN WHITE ROWS (Fixes user reported issue)
+   ========================================================================== */
+.table-noir, .table {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-noir thead th,
+.table thead th {
+  background-color: #0c121e !important;
+  color: #fbbf24 !important;
+  border-bottom: 3px solid #f59e0b !important;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem 1rem !important;
+}
+
+.table-noir tbody tr td,
+.table tbody tr td {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 0.95rem 1rem !important;
+  vertical-align: middle;
+  font-size: 0.92rem;
+}
+
+.table-noir tbody tr:hover td,
+.table tbody tr:hover td {
+  background-color: #f1f5f9 !important;
+  color: #000000 !important;
+}
+
+/* Explicitly force ALL text, links, descriptions, spans inside table cells to be solid dark black */
+.table-noir tbody td,
+.table-noir tbody td a,
+.table-noir tbody td span:not(.badge),
+.table-noir tbody td p,
+.table-noir tbody td div,
+.table tbody td,
+.table tbody td a,
+.table tbody td span:not(.badge),
+.table tbody td p,
+.table tbody td div {
+  color: #0f172a !important;
+}
+
+.table-noir tbody td a,
+.table tbody td a {
+  font-weight: 700 !important;
+}
+
+.table-noir tbody td a:hover,
+.table tbody td a:hover {
+  color: #b45309 !important;
+  text-decoration: underline !important;
+}
+
+/* Trophies & Rank text in table */
+.table-noir tbody td .rank-badge-1 { color: #d97706 !important; font-size: 1.25rem; }
+.table-noir tbody td .rank-badge-2 { color: #64748b !important; font-size: 1.25rem; }
+.table-noir tbody td .rank-badge-3 { color: #c2410c !important; font-size: 1.25rem; }
+
+/* Current User Table Row Highlight */
+.table-noir tr.current-user-row td,
+.table tr.current-user-row td {
+  background-color: #fef3c7 !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+.table-noir tr.current-user-row td a,
+.table-noir tr.current-user-row td span:not(.badge),
+.table tr.current-user-row td a,
+.table tr.current-user-row td span:not(.badge) {
+  color: #0f172a !important;
+}
+
+/* Table Badge Overrides */
+.table tbody td .badge-gold,
+.table-noir tbody td .badge-gold {
+  color: #92400e !important;
+  background-color: #fef3c7 !important;
+  border: 1px solid #f59e0b !important;
+  font-weight: 700;
+}
+
+.table tbody td .badge-diff-easy,
+.table-noir tbody td .badge-diff-easy {
+  color: #065f46 !important;
+  background-color: #d1fae5 !important;
+  border: 1px solid #10b981 !important;
+  font-weight: 700;
+}
+
+.table tbody td .badge-diff-medium,
+.table-noir tbody td .badge-diff-medium {
+  color: #92400e !important;
+  background-color: #fef3c7 !important;
+  border: 1px solid #f59e0b !important;
+  font-weight: 700;
+}
+
+.table tbody td .badge-diff-hard,
+.table-noir tbody td .badge-diff-hard {
+  color: #991b1b !important;
+  background-color: #fee2e2 !important;
+  border: 1px solid #ef4444 !important;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   ALERT BOXES: SOLID BLACK TEXT ON LIGHT BACKGROUNDS (Fixes Screenshot 4)
+   ========================================================================== */
+.alert-dark, .alert-light, .alert-secondary {
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.alert-dark *, .alert-light *, .alert-secondary * {
+  color: #0f172a !important;
+}
+
+.alert-dark strong, .alert-dark b,
+.alert-secondary strong, .alert-secondary b {
+  color: #000000 !important;
+}
+
+.alert-dark i, .alert-secondary i {
+  color: #d97706 !important;
+}
+
+/* ==========================================================================
+   Navbar
+   ========================================================================== */
+.navbar-detective {
+  background: rgba(12, 18, 30, 0.98);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--mq-border-color);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+}
+
+.navbar-brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--mq-gold) !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  color: #cbd5e1 !important;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.9rem !important;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: #ffffff !important;
+  background-color: rgba(245, 158, 11, 0.15);
+}
+
+/* Cards */
+.card-detective {
+  background-color: var(--mq-bg-card);
+  border: 1px solid var(--mq-border-color);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-detective:hover {
+  border-color: var(--mq-border-gold);
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.18);
+  transform: translateY(-2px);
+}
+
+.card-header-detective {
+  background: rgba(12, 18, 30, 0.9);
+  border-bottom: 1px solid var(--mq-border-color);
+  padding: 1rem 1.25rem;
+}
+
+/* Custom Buttons */
+.btn-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  color: #070b12 !important;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1.25rem;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-gold:hover, .btn-gold:focus {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #000000 !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-outline-gold {
+  background: transparent;
+  color: #fbbf24 !important;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-gold:hover {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #ffffff !important;
+  border-color: #fbbf24;
+}
+
+/* Hero Section */
+.hero-noir {
+  position: relative;
+  background: radial-gradient(circle at 50% 30%, #1a273f 0%, #070b12 75%);
+  padding: 4.5rem 1rem 3.5rem;
+  border-bottom: 1px solid var(--mq-border-color);
+}
+
+.hero-noir::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+
+/* Investigation Room Tabs */
+.investigation-tabs .nav-link {
+  color: #cbd5e1 !important;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.25rem !important;
+}
+
+.investigation-tabs .nav-link.active {
+  color: #fbbf24 !important;
+  background: var(--mq-bg-card);
+  border-color: var(--mq-border-color) var(--mq-border-color) transparent;
+  border-bottom: 2px solid #f59e0b;
+}
+
+/* Clue Card */
+.clue-card {
+  background-color: #121c2e !important;
+  border: 1px solid #2d3f5e !important;
+  border-radius: 10px;
+  padding: 1.35rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.clue-card:hover {
+  border-color: var(--mq-gold) !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);
+}
+
+.clue-card h6 {
+  color: #fbbf24 !important;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.clue-card p {
+  color: #f1f5f9 !important;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-top: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.clue-card .text-dim, .clue-card .text-muted {
+  color: #93c5fd !important;
+  font-weight: 500;
+}
+
+.clue-card.collected {
+  border-style: solid;
+  border-color: #10b981 !important;
+  background: linear-gradient(180deg, #132a3a 0%, #122131 100%) !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+/* Suspect Card */
+.suspect-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #fbbf24;
+  border: 2px solid var(--mq-border-color);
+}
+
+/* Suspect Status Tags */
+.suspect-status-chip {
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.suspect-status-chip.active-cleared {
+  background-color: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+  border-color: #10b981;
+}
+
+.suspect-status-chip.active-poi {
+  background-color: rgba(245, 158, 11, 0.25);
+  color: #fde047;
+  border-color: #f59e0b;
+}
+
+.suspect-status-chip.active-prime {
+  background-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border-color: #ef4444;
+}
+
+/* Progress Bar */
+.progress-noir {
+  background-color: #1e293b;
+  border-radius: 50px;
+  height: 14px;
+  overflow: hidden;
+  border: 1px solid var(--mq-border-color);
+}
+
+.progress-noir-bar {
+  background: linear-gradient(90deg, #d97706 0%, #fbbf24 100%);
+  transition: width 0.4s ease;
+}
+
+/* Live Search Container */
+.search-input-noir {
+  background-color: #0c121e !important;
+  color: #ffffff !important;
+  border: 1px solid var(--mq-border-color) !important;
+  border-radius: 10px !important;
+  padding: 0.8rem 1.25rem !important;
+  font-size: 1rem !important;
+}
+
+.search-input-noir:focus {
+  border-color: var(--mq-gold) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Teletype Wire Banner */
+.teletype-ticker {
+  background-color: #0a0f19;
+  border: 1px solid var(--mq-border-color);
+  border-left: 3px solid var(--mq-gold);
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Footer */
+.footer-detective {
+  background-color: #080c14;
+  border-top: 1px solid var(--mq-border-color);
+  padding: 2.2rem 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}

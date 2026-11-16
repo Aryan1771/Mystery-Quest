@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Case Files Archive – Mystery Quest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h6 class="text-warning text-uppercase fw-bold mb-1">Central Crime Archives</h6>
+            <h2 class="text-light mb-0" style="font-family: 'Cinzel', serif;">CLASSIFIED CASE FILES</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'export_cases_csv' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Cases CSV
+            </a>
+            {% if user.is_staff %}
+            <a href="{% url 'case_create' %}" class="btn btn-gold btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> File New Case
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="card card-detective p-3 mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-dark text-light border-secondary" placeholder="Filter by case title, synopsis or lore..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-1">
+                    <a href="?difficulty={% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm {% if not selected_difficulty %}btn-gold{% else %}btn-outline-secondary{% endif %}">All</a>
+                    <a href="?difficulty=Easy{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm {% if selected_difficulty == 'Easy' %}btn-success{% else %}btn-outline-secondary{% endif %}">Easy</a>
+                    <a href="?difficulty=Medium{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm {% if selected_difficulty == 'Medium' %}btn-warning{% else %}btn-outline-secondary{% endif %}">Medium</a>
+                    <a href="?difficulty=Hard{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm {% if selected_difficulty == 'Hard' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Hard</a>
+                </div>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <button type="submit" class="btn btn-outline-gold btn-sm w-100">
+                    <i class="bi bi-funnel me-1"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Case Cards Grid -->
+    <div class="row g-4">
+        {% for item in cases_with_status %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card card-detective h-100 d-flex flex-column">
+                <div class="card-header-detective d-flex justify-content-between align-items-center">
+                    <span class="badge {% if item.case.difficulty == 'Easy' %}badge-diff-easy{% elif item.case.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %}">
+                        {{ item.case.difficulty }} ({{ item.case.base_points }} pts)
+                    </span>
+                    
+                    {% if item.progress %}
+                        {% if item.progress.completion_status == 'Solved' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Solved ({{ item.progress.score }} pts)</span>
+                        {% elif item.progress.completion_status == 'Failed' %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Unsolved</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> In Progress</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-dark border border-secondary text-muted">Unopened</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-light fw-bold mb-2">
+                        <a href="{% url 'case_detail' item.case.id %}" class="text-light">{{ item.case.title }}</a>
+                    </h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        {{ item.case.description }}
+                    </p>
+
+                    <div class="pt-3 border-top border-secondary border-opacity-25 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small text-muted">
+                                <i class="bi bi-people text-warning me-1"></i> {{ item.case.suspects.count }} Suspects
+                            </span>
+                            <span class="small text-muted">
+                                <i class="bi bi-search text-info me-1"></i> {{ item.case.clues.count }} Clues
+                            </span>
+                            <span class="small text-muted">
+                                <i class="bi bi-file-text text-secondary me-1"></i> {{ item.case.witness_statements.count }} Witnesses
+                            </span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {% if item.progress %}
+                                <a href="{% url 'investigate' item.case.id %}" class="btn btn-gold btn-sm">
+                                    <i class="bi bi-door-open-fill me-1"></i> Enter Crime Room
+                                </a>
+                            {% else %}
+                                <a href="{% url 'case_detail' item.case.id %}" class="btn btn-outline-gold btn-sm">
+                                    <i class="bi bi-folder2-open me-1"></i> Inspect Case Brief
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-journal-x fs-1 text-secondary d-block mb-3"></i>
+            <h5 class="text-light">No cases found matching your criteria.</h5>
+            <p class="text-muted">Try clearing the search query or difficulty filter.</p>
+            <a href="{% url 'case_list' %}" class="btn btn-gold btn-sm">Reset Filters</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

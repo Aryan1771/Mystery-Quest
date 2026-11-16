@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crime Room – {{ case.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Top Investigation Header & Status Bar -->
+    <div class="card card-detective p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge {% if case.difficulty == 'Easy' %}badge-diff-easy{% elif case.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %}">
+                        {{ case.difficulty }}
+                    </span>
+                    <span class="badge bg-dark border border-secondary text-light">Case #{{ case.id|stringformat:"04d" }}</span>
+                    {% if progress.completion_status == 'Solved' %}
+                        <span class="badge bg-success"><i class="bi bi-shield-fill-check me-1"></i> SOLVED (+{{ progress.score }} pts)</span>
+                    {% elif progress.completion_status == 'Failed' %}
+                        <span class="badge bg-danger"><i class="bi bi-shield-fill-x me-1"></i> UNSOLVED</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark fw-bold"><i class="bi bi-hourglass-split me-1"></i> ACTIVE INVESTIGATION</span>
+                    {% endif %}
+                </div>
+                <h3 class="text-light fw-bold mb-0" style="font-family: 'Cinzel', serif;">{{ case.title }}</h3>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'crime_lab' %}" class="btn btn-outline-warning btn-sm" target="_blank" title="Open Forensic Crime Lab">
+                    <i class="bi bi-cpu-fill me-1"></i> Crime Lab Tools
+                </a>
+                <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Dossier
+                </a>
+                <a href="{% url 'case_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Case Files
+                </a>
+            </div>
+        </div>
+
+        <hr class="border-secondary my-3 opacity-25">
+
+        <!-- Investigation Progress Bar -->
+        <div class="row align-items-center g-3">
+            <div class="col-md-7">
+                <div class="d-flex justify-content-between text-muted small mb-1">
+                    <span><i class="bi bi-search text-warning me-1"></i> Clues Recovered: <b id="clueCountText" class="text-light">{{ progress.collected_clues.count }} / {{ all_clues.count }}</b></span>
+                    <span>Investigation Depth: <b id="caseProgressText" class="text-warning">{{ progress.progress_percentage }}%</b></span>
+                </div>
+                <div class="progress progress-noir">
+                    <div id="caseProgressBar" class="progress-bar progress-noir-bar" role="progressbar" 
+                         style="width: {{ progress.progress_percentage }}%;" 
+                         aria-valuenow="{{ progress.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            <div class="col-md-5 text-md-end text-muted small">
+                <span class="me-3"><i class="bi bi-cpu text-info me-1"></i> Hints Used: <b class="text-light">{{ progress.hints_used }}</b></span>
+                <span><i class="bi bi-award text-warning me-1"></i> Current Score: <b class="text-warning">{{ progress.score }} pts</b></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Solved Revelation Banner -->
+    {% if progress.completion_status == 'Solved' %}
+    <div class="alert alert-success border-success bg-success bg-opacity-10 p-4 mb-4 shadow">
+        <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-trophy-fill fs-1 text-warning"></i>
+            <div>
+                <h4 class="alert-heading fw-bold text-success mb-1">CASE SOLVED! PERPETRATOR APPREHENDED!</h4>
+                <p class="mb-2 text-light">
+                    Sensational investigative work, Detective {{ user.username }}! Your accusation of 
+                    <strong class="text-warning">{{ case.correct_suspect.name }}</strong> was confirmed with overwhelming forensic evidence.
+                </p>
+                <div class="p-3 rounded bg-dark border border-secondary mb-3 text-light small" style="line-height: 1.6;">
+                    <strong class="text-warning d-block mb-1"><i class="bi bi-file-earmark-check me-1"></i> Official Solution Briefing:</strong>
+                    {{ case.solution_explanation }}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Download Certified PDF Case Report
+                    </a>
+                    <a href="{% url 'leaderboard' %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-trophy me-1"></i> View Updated Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Investigation Multi-Panel Workspace -->
+    <div class="card card-detective overflow-hidden">
+        <!-- Tabs Header -->
+        <ul class="nav nav-tabs investigation-tabs p-2 border-bottom border-secondary" id="investigationTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="clues-tab" data-bs-toggle="tab" data-bs-target="#clues-pane" type="button" role="tab">
+                    <i class="bi bi-search me-1"></i> 1. Crime Scene Clues ({{ all_clues.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="suspects-tab" data-bs-toggle="tab" data-bs-target="#suspects-pane" type="button" role="tab">
+                    <i class="bi bi-people me-1"></i> 2. Suspect Dossiers ({{ suspects.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="evidence-tab" data-bs-toggle="tab" data-bs-target="#evidence-pane" type="button" role="tab">
+                    <i class="bi bi-shield-shaded me-1"></i> 3. Evidence Locker ({{ evidence_records.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="witnesses-tab" data-bs-toggle="tab" data-bs-target="#witnesses-pane" type="button" role="tab">
+                    <i class="bi bi-chat-quote me-1"></i> 4. Witness Testimonies ({{ witness_statements.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-info" id="notebook-tab" data-bs-toggle="tab" data-bs-target="#notebook-pane" type="button" role="tab">
+                    <i class="bi bi-journal-text me-1"></i> 5. Field Notebook
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-warning" id="hints-tab" data-bs-toggle="tab" data-bs-target="#hints-pane" type="button" role="tab">
+                    <i class="bi bi-cpu me-1"></i> 6. AI Clue Assistant
+                </button>
+            </li>
+            <li class="nav-item ms-auto" role="presentation">
+                <button class="nav-link btn-gold text-dark fw-bold px-3 py-1" id="accusation-tab" data-bs-toggle="tab" data-bs-target="#accusation-pane" type="button" role="tab">
+                    <i class="bi bi-gavel me-1"></i> Accusation Chamber
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Panes Content -->
+        <div class="tab-content p-4" id="investigationTabContent">
+            
+            <!-- Pane 1: Clues (High Contrast) -->
+            <div class="tab-pane fade show active" id="clues-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="text-light fw-bold mb-1">Crime Scene Clues & Forensic Artifacts</h5>
+                        <p class="text-muted small mb-0">Search the premises and catalog all recoverable traces into your detective dossier.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    {% for clue in all_clues %}
+                    <div class="col-md-6">
+                        <div id="clue-card-{{ clue.id }}" class="clue-card h-100 d-flex flex-column {% if clue.id in collected_clue_ids %}collected{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="text-gold fw-bold mb-0">
+                                    <i class="bi bi-pin-angle-fill me-1"></i> {{ clue.title }}
+                                </h6>
+                                <span class="badge {% if clue.id in collected_clue_ids %}bg-success text-light border border-success{% else %}bg-secondary text-light{% endif %} clue-status-badge">
+                                    {% if clue.id in collected_clue_ids %}<i class="bi bi-check2"></i> Cataloged{% else %}{{ clue.clue_type }}{% endif %}
+                                </span>
+                            </div>
+
+                            <p class="small mb-3 flex-grow-1" style="color: #f1f5f9 !important; font-size: 0.95rem; line-height: 1.6;">
+                                {{ clue.description }}
+                            </p>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-50">
+                                <span class="small" style="color: #93c5fd;"><i class="bi bi-tag me-1"></i> {{ clue.clue_type }}</span>
+                                {% if clue.id in collected_clue_ids %}
+                                    <button class="btn btn-sm btn-success disabled" disabled>
+                                        <i class="bi bi-check-circle-fill me-1"></i> Cataloged
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-gold btn-collect-clue" 
+                                            data-url="{% url 'collect_clue' case.id clue.id %}" 
+                                            data-clue-id="{{ clue.id }}">
+                                        <i class="bi bi-hand-index me-1"></i> Inspect & Catalog
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pane 2: Suspects & Interactive Elimination Board -->
+            <div class="tab-pane fade" id="suspects-pane" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+                    <div>
+                        <h5 class="text-light fw-bold mb-1">Suspect Dossiers & Elimination Matrix</h5>
+                        <p class="text-muted small mb-0">Cross-reference alibis against witness accounts. Tag suspects to organize your hypothesis.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-dark border border-secondary text-muted">Click tags below to categorize</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    {% for suspect in suspects %}
+                    <div class="col-md-4">
+                        <div class="card card-detective p-3 h-100 d-flex flex-column" id="suspect-box-{{ suspect.id }}">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="suspect-avatar">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="text-light fw-bold mb-0">{{ suspect.name }}</h5>
+                                    <span class="badge bg-dark border border-secondary text-warning small">{{ suspect.profile|truncatewords:4 }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Elimination Chips -->
+                            <div class="d-flex gap-1 mb-3">
+                                <span class="suspect-status-chip badge bg-dark border border-secondary text-muted" onclick="toggleSuspectStatus({{ suspect.id }}, 'cleared', this)">
+                                    <i class="bi bi-shield-check me-1"></i> Alibi Solid
+                                </span>
+                                <span class="suspect-status-chip badge bg-dark border border-secondary text-muted" onclick="toggleSuspectStatus({{ suspect.id }}, 'poi', this)">
+                                    <i class="bi bi-question-circle me-1"></i> Suspicious
+                                </span>
+                                <span class="suspect-status-chip badge bg-dark border border-secondary text-muted" onclick="toggleSuspectStatus({{ suspect.id }}, 'prime', this)">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Prime Target
+                                </span>
+                            </div>
+
+                            <div class="small mb-3">
+                                <span class="text-warning fw-bold d-block mb-1"><i class="bi bi-person-vcard me-1"></i> Profile & Background:</span>
+                                <p class="text-light mb-2" style="color: #e2e8f0 !important;">{{ suspect.profile }}</p>
+
+                                <span class="text-info fw-bold d-block mb-1"><i class="bi bi-clock-history me-1"></i> Stated Alibi:</span>
+                                <p class="text-light bg-dark p-2 rounded border border-secondary mb-2 fst-italic">{{ suspect.alibi }}</p>
+
+                                <span class="text-danger fw-bold d-block mb-1"><i class="bi bi-exclamation-octagon me-1"></i> Investigated Motive:</span>
+                                <p class="text-light mb-0" style="color: #cbd5e1 !important;">{{ suspect.motive }}</p>
+                            </div>
+
+                            <div class="mt-auto pt-2 border-top border-secondary border-opacity-50 text-center">
+                                <button class="btn btn-sm btn-outline-warning w-100" onclick="document.getElementById('accusation-tab').click(); document.getElementById('id_selected_suspect').value='{{ suspect.id }}';">
+                                    <i class="bi bi-fingerprint me-1"></i> Target for Accusation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pane 3: Evidence Locker -->
+            <div class="tab-pane fade" id="evidence-pane" role="tabpanel">
+                <div class="mb-4">
+                    <h5 class="text-light fw-bold mb-1">Forensic Evidence Locker</h5>
+                    <p class="text-muted small mb-0">Physical objects and forensic traces connecting suspects directly to the crime.</p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-noir table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Evidence Type</th>
+                                <th>Description & Forensic Details</th>
+                                <th>Associated Suspect</th>
+                                <th>Linked Clue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ev in evidence_records %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-dark border border-warning text-warning">
+                                        <i class="bi bi-shield-fill-exclamation me-1"></i> {{ ev.evidence_type }}
+                                    </span>
+                                </td>
+                                <td class="text-dark fw-medium" style="color: #0f172a !important;">{{ ev.description }}</td>
+                                <td>
+                                    {% if ev.suspect %}
+                                        <span class="fw-bold text-dark fs-6" style="color: #0f172a !important;">{{ ev.suspect.name }}</span>
+                                    {% else %}
+                                        <span class="text-secondary fst-italic">Under Analysis</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ev.clue %}
+                                        <span class="text-primary fw-bold small">{{ ev.clue.title }}</span>
+                                    {% else %}
+                                        <span class="text-secondary small">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No evidence records logged yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pane 4: Witness Testimonies -->
+            <div class="tab-pane fade" id="witnesses-pane" role="tabpanel">
+                <div class="mb-4">
+                    <h5 class="text-light fw-bold mb-1">Eyewitness Depositions</h5>
+                    <p class="text-muted small mb-0">Recorded witness statements from the scene. Scrutinize credibility closely for contradictions.</p>
+                </div>
+
+                <div class="row g-3">
+                    {% for w in witness_statements %}
+                    <div class="col-md-6">
+                        <div class="card-detective p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-light fw-bold mb-0">
+                                    <i class="bi bi-person-lines-fill text-warning me-1"></i> {{ w.witness_name }}
+                                </h6>
+                                <span class="badge {% if w.credibility == 'High' %}bg-success{% elif w.credibility == 'Medium' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ w.credibility }} Credibility
+                                </span>
+                            </div>
+                            <blockquote class="blockquote small mb-0">
+                                <p class="fst-italic text-light mb-2" style="font-size: 1rem; color: #f8fafc !important;">"{{ w.statement }}"</p>
+                                <footer class="blockquote-footer small" style="color: #94a3b8;">Recorded in official field interview</footer>
+                            </blockquote>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted py-4">No witness statements recorded for this docket.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pane 5: Field Notebook & Theory Board (NEW FEATURE) -->
+            <div class="tab-pane fade" id="notebook-pane" role="tabpanel">
+                <div class="card-detective p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div>
+                            <h5 class="text-light fw-bold mb-1"><i class="bi bi-journal-bookmark-fill text-info me-2"></i> Detective Field Notebook & Scratchpad</h5>
+                            <p class="text-muted small mb-0">Record your working hypotheses, timeline observations, and contradiction notes.</p>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span id="notesSaveStatus" class="small text-muted">Autosaved</span>
+                            <button type="button" class="btn btn-gold btn-sm" onclick="saveNotebook()">
+                                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Field Notes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stamp Buttons -->
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-light" onclick="insertNoteStamp('timestamp')">
+                            <i class="bi bi-clock me-1"></i> [Timestamp]
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="insertNoteStamp('alibi')">
+                            <i class="bi bi-exclamation-circle me-1"></i> [Alibi Contradiction]
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="insertNoteStamp('prime')">
+                            <i class="bi bi-crosshair me-1"></i> [Prime Suspect Identified]
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="insertNoteStamp('clue')">
+                            <i class="bi bi-link-45deg me-1"></i> [Key Forensic Link]
+                        </button>
+                    </div>
+
+                    <form id="notebookForm" method="POST" action="{% url 'save_case_notes' case.id %}">
+                        {% csrf_token %}
+                        <textarea id="detectiveNotesArea" name="notes" class="form-control bg-dark text-light font-monospace border-secondary p-3" rows="9" 
+                                  placeholder="Detective notes: Write down contradictory statements, timeline gaps, or potential accomplice theories here...">{{ progress.investigation_notes }}</textarea>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pane 6: Rule-Based AI Clue Assistant -->
+            <div class="tab-pane fade" id="hints-pane" role="tabpanel">
+                <div class="card-detective p-4 border-warning border-opacity-25">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="suspect-avatar" style="width: 55px; height: 55px; font-size: 1.5rem;">
+                            <i class="bi bi-robot text-warning"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-light fw-bold mb-0">Rule-Based AI Investigation Assistant</h5>
+                            <span class="text-muted small">Intelligent heuristic deduction engine. Analyzes collected clues & highlights overlooked leads.</span>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small">
+                        Hit a dead end? The Bureau's heuristic engine cross-checks clues currently recorded in your docket 
+                        against suspect alibis and witness statements to provide tactical direction without directly spoiling the culprit.
+                    </p>
+
+                    <div class="alert alert-dark border-secondary small text-warning mb-4">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Consulting an AI hint deducts <b>15 points</b> from your final case efficiency score!
+                    </div>
+
+                    <div class="mb-3">
+                        <button id="requestHintBtn" class="btn btn-gold" data-url="{% url 'get_hint' case.id %}">
+                            <i class="bi bi-lightbulb-fill me-1"></i> Request AI Clue Hint (-15 pts)
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Hint Display Box -->
+                    <div id="hintDisplayBox" class="mt-4 {% if progress.hints_used == 0 %}d-none{% endif %}">
+                        <div class="alert alert-warning border-warning shadow-sm">
+                            <h6 class="alert-heading fw-bold mb-1"><i class="bi bi-cpu me-1"></i> Active AI Investigation Guidance</h6>
+                            <p class="mb-0 text-light">Inspect all clues and cross-reference witness timelines against suspect alibis. Pay special attention to unverified whereabouts!</p>
+                            <div class="small text-muted mt-2">Total hints consulted on this docket: <b>{{ progress.hints_used }}</b></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pane 7: Accusation Chamber -->
+            <div class="tab-pane fade" id="accusation-pane" role="tabpanel">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card card-detective p-4">
+                            <div class="text-center mb-4">
+                                <div class="suspect-avatar mx-auto mb-2" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-gavel text-warning fs-3"></i>
+                                </div>
+                                <h4 class="text-light fw-bold" style="font-family: 'Cinzel', serif;">OFFICIAL ACCUSATION CHAMBER</h4>
+                                <p class="text-muted small">
+                                    When your deductive chain is complete, submit your formal accusation before the Magistrate.
+                                </p>
+                            </div>
+
+                            {% if latest_accusation and not latest_accusation.correctness and progress.completion_status != 'Solved' %}
+                            <div class="alert alert-danger border-danger mb-4">
+                                <h6 class="alert-heading fw-bold mb-1"><i class="bi bi-shield-x me-1"></i> Previous Accusation Refuted</h6>
+                                <p class="mb-0 small text-light">
+                                    You previously accused <b>{{ latest_accusation.selected_suspect.name }}</b>, but their defense established conclusive innocence. 
+                                    Re-examine the clues and file an accurate accusation.
+                                </p>
+                            </div>
+                            {% endif %}
+
+                            {% if progress.completion_status == 'Solved' %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-patch-check-fill text-success fs-1 d-block mb-2"></i>
+                                <h5 class="text-success fw-bold">Case Successfully Closed!</h5>
+                                <p class="text-muted small">You have already brought the true culprit ({{ case.correct_suspect.name }}) to justice.</p>
+                                <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> Download Certified PDF Case Report
+                                </a>
+                            </div>
+                            {% else %}
+                            <form method="POST" action="{% url 'submit_accusation' case.id %}">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-light small fw-bold">Select the Perpetrator / Culprit</label>
+                                    {{ accusation_form.selected_suspect }}
+                                    {% if accusation_form.selected_suspect.errors %}
+                                        <div class="text-danger small mt-1">{{ accusation_form.selected_suspect.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label text-light small fw-bold">Investigative Deduction Notes</label>
+                                    {{ accusation_form.deduction_notes }}
+                                    <div class="text-dim small mt-1" style="font-size: 0.75rem;">
+                                        Document which evidence breaks their alibi and proves culpability.
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-light border-secondary small text-dark mb-4" style="background-color: #f8fafc !important; color: #0f172a !important;">
+                                    <strong class="text-dark"><i class="bi bi-info-circle-fill text-warning me-1"></i> Scoring Formula:</strong><br>
+                                    <span class="text-dark fw-medium">Base Reward ({{ case.base_points }} pts) + Clue Discovery Bonus (+10 pts/clue) - Hint Penalties (-15 pts/hint). False accusations will not award points!</span>
+                                </div>
+
+                                <button type="submit" class="btn btn-gold w-100 py-2 fw-bold">
+                                    <i class="bi bi-gavel me-1"></i> Formally Indict Suspect
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/investigation.js' %}"></script>
+<script>
+// Suspect Elimination Board Matrix
+function toggleSuspectStatus(suspectId, status, el) {
+    const box = document.getElementById(`suspect-box-${suspectId}`);
+    const chips = box.querySelectorAll('.suspect-status-chip');
+    chips.forEach(c => {
+        c.className = "suspect-status-chip badge bg-dark border border-secondary text-muted";
+    });
+
+    if (status === 'cleared') {
+        el.className = "suspect-status-chip badge active-cleared";
+        box.style.borderColor = "rgba(16, 185, 129, 0.5)";
+    } else if (status === 'poi') {
+        el.className = "suspect-status-chip badge active-poi";
+        box.style.borderColor = "rgba(245, 158, 11, 0.5)";
+    } else if (status === 'prime') {
+        el.className = "suspect-status-chip badge active-prime";
+        box.style.borderColor = "rgba(239, 68, 68, 0.7)";
+    }
+}
+
+// Field Notebook Auto-Save
+function saveNotebook() {
+    const form = document.getElementById('notebookForm');
+    const status = document.getElementById('notesSaveStatus');
+    const notes = document.getElementById('detectiveNotesArea').value;
+
+    status.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`;
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ notes: notes })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            status.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> Saved (${data.timestamp})`;
+        } else {
+            status.innerHTML = `<span class="text-danger">Save failed</span>`;
+        }
+    })
+    .catch(err => {
+        status.innerHTML = `<span class="text-danger">Error saving</span>`;
+    });
+}
+
+function insertNoteStamp(type) {
+    const area = document.getElementById('detectiveNotesArea');
+    const now = new Date().toLocaleTimeString();
+    let text = "";
+    if (type === 'timestamp') text = `\n[${now}] `;
+    if (type === 'alibi') text = `\n[ALIBI CONTRADICTION - ${now}]: `;
+    if (type === 'prime') text = `\n[PRIME TARGET IDENTIFIED - ${now}]: `;
+    if (type === 'clue') text = `\n[KEY FORENSIC LINK - ${now}]: `;
+    
+    area.value += text;
+    area.focus();
+}
+</script>
+{% endblock %}

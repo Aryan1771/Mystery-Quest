@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Real-Time Live Search – Mystery Quest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="text-center mb-4">
+        <h6 class="text-warning text-uppercase fw-bold mb-1">Bureau Database Query System</h6>
+        <h2 class="text-light fw-bold" style="font-family: 'Cinzel', serif;">REAL-TIME INVESTIGATION SEARCH</h2>
+        <p class="text-muted small mx-auto" style="max-width: 600px;">
+            Powered by asynchronous JavaScript Fetch API & Django JSON endpoints. Query cases, physical clues, and suspects instantly without page refresh.
+        </p>
+    </div>
+
+    <!-- Live Search Control Card -->
+    <div class="card card-detective p-4 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-warning">
+                        <i class="bi bi-search fs-5"></i>
+                    </span>
+                    <input type="text" id="liveSearchInput" class="form-control search-input-noir" 
+                           placeholder="Type to search cases, clues, suspects, forensic traces or motives..." autofocus autocomplete="off">
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-2">
+                    <label for="searchCategory" class="text-muted small fw-bold text-nowrap">Filter By:</label>
+                    <select id="searchCategory" class="form-select bg-dark text-light border-secondary">
+                        <option value="all">All Archive Records</option>
+                        <option value="cases">Cases Only</option>
+                        <option value="clues">Clues Only</option>
+                        <option value="suspects">Suspects Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
+            <span class="small text-muted">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Asynchronous Fetch Engine Active
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <span id="searchSpinner" class="spinner-border spinner-border-sm text-warning d-none" role="status"></span>
+                <span id="resultsCountBadge" class="badge bg-dark border border-secondary text-warning">0 found</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Dynamic Results Area -->
+    <div class="card card-detective p-4">
+        <div id="searchResultsArea">
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-search fs-1 d-block mb-3 text-secondary"></i>
+                <h5>Enter a keyword to inspect case dockets, clues, or suspect profiles</h5>
+                <p class="small text-dim">Type at least 1 character to initiate search.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/search.js' %}"></script>
+{% endblock %}

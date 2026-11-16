@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bureau Operations Headquarters – Mystery Quest{% endblock %}
+
+{% block content %}
+<!-- Live Bureau Teletype Wire -->
+<div class="container mt-3">
+    <div class="teletype-ticker d-flex align-items-center gap-2">
+        <span class="badge bg-danger text-uppercase fw-bold"><i class="bi bi-broadcast me-1"></i> BUREAU WIRE</span>
+        <marquee behavior="scroll" direction="left" scrollamount="6" class="text-warning small mb-0">
+            [FLASH] Forensic Crime Lab now active: Decrypt ciphers, analyze chemical toxins, and compare fingerprints • 
+            [CASE #01] Suspect Julian Harrington cell telemetry ping contradicts alibi • 
+            [CASE #02] Synthetic Aconite poison identified in Finch teacup • 
+            [ROSTER] Master Detective vansh123 currently holds the #1 position on the Hall of Fame Leaderboard (1250 pts) • 
+            [NOTICE] All fictional cases are authorized for academic examination.
+        </marquee>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<section class="hero-noir text-center mt-3">
+    <div class="container position-relative">
+        <span class="badge badge-gold text-uppercase px-3 py-2 mb-3">
+            <i class="bi bi-shield-check me-1"></i> Bureau of Detective Criminal Investigation
+        </span>
+        <h1 class="display-4 fw-bold text-light mb-3" style="font-family: 'Cinzel', serif;">
+            THE CRIME SCENE AWAITS, <span class="text-warning">DETECTIVE</span>
+        </h1>
+        <p class="lead text-muted mx-auto mb-4" style="max-width: 760px; font-size: 1.15rem;">
+            Step into the shoes of an investigator. Unravel cold cases, uncover concealed forensic clues, 
+            run laboratory ciphers, expose deceptive alibis, and bring fictional culprits to justice before the court.
+        </p>
+
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a href="{% url 'case_list' %}" class="btn btn-gold btn-lg px-4">
+                <i class="bi bi-briefcase-fill me-2"></i> Inspect Case Files
+            </a>
+            <a href="{% url 'crime_lab' %}" class="btn btn-outline-warning btn-lg px-4">
+                <i class="bi bi-cpu-fill me-2"></i> Forensic Crime Lab
+            </a>
+            <a href="{% url 'search_page' %}" class="btn btn-outline-gold btn-lg px-4">
+                <i class="bi bi-search me-2"></i> Live Search Console
+            </a>
+            <a href="{% url 'leaderboard' %}" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-trophy me-2"></i> Hall of Fame
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Bar -->
+<section class="py-4 border-bottom border-secondary" style="background-color: #0c121e;">
+    <div class="container">
+        <div class="row text-center g-3">
+            <div class="col-md-3 col-6">
+                <h3 class="text-warning fw-bold mb-0">{{ total_cases }}</h3>
+                <span class="text-muted small text-uppercase">Active Mystery Cases</span>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3 class="text-success fw-bold mb-0">{{ total_solved }}</h3>
+                <span class="text-muted small text-uppercase">Cases Solved</span>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3 class="text-info fw-bold mb-0">{{ top_detectives.count }}</h3>
+                <span class="text-muted small text-uppercase">Ranked Detectives</span>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3 class="text-light fw-bold mb-0">100%</h3>
+                <span class="text-muted small text-uppercase">Fictional & Academic</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Logged In Detective Command Dossier & Milestone Tracker -->
+{% if user_stats %}
+<section class="container mt-4">
+    <div class="card card-detective p-4 border-warning border-opacity-50">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="suspect-avatar" style="width: 70px; height: 70px; font-size: 2rem;">
+                        <i class="bi bi-person-badge-fill text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h4 class="mb-0 text-light fw-bold">Detective {{ user.username }}</h4>
+                            <span class="badge bg-warning text-dark fw-bold">{{ user_stats.profile.rank }}</span>
+                            <span class="badge bg-dark border border-secondary text-info">{{ user_stats.profile.badge_level }} Tier</span>
+                        </div>
+                        <div class="text-muted small">
+                            Total Score: <b class="text-warning">{{ user_stats.profile.total_score }} pts</b> &nbsp;|&nbsp; 
+                            Solved: <b class="text-success">{{ user_stats.profile.cases_solved }} cases</b> &nbsp;|&nbsp;
+                            Active Inquiries: <b class="text-info">{{ user_stats.active_investigations }}</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                    <a href="{% url 'crime_lab' %}" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-cpu me-1"></i> Forensic Tools
+                    </a>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-gold">
+                        <i class="bi bi-person-lines-fill me-1"></i> View Full Dossier
+                    </a>
+                    <a href="{% url 'case_list' %}" class="btn btn-sm btn-gold">
+                        <i class="bi bi-door-open-fill me-1"></i> Investigate Next Case
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Operations Hub: 4 Key Divisions -->
+<section class="container my-5">
+    <div class="text-center mb-4">
+        <h6 class="text-warning text-uppercase fw-bold letter-spacing-1">Investigation Divisions</h6>
+        <h2 class="text-light" style="font-family: 'Cinzel', serif;">CENTRAL INVESTIGATION SUITE</h2>
+        <p class="text-muted small mx-auto" style="max-width: 600px;">
+            Access specialized headquarters divisions to gather evidence, decipher hidden messages, search case archives, and download certified reports.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Division 1 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card card-detective p-4 h-100 d-flex flex-column border-warning border-opacity-25">
+                <div class="suspect-avatar mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                    <i class="bi bi-cpu-fill text-warning"></i>
+                </div>
+                <h5 class="text-light fw-bold mb-2">Forensic Crime Lab</h5>
+                <p class="text-muted small flex-grow-1">
+                    Decrypt Caesar & Base64 ciphers, analyze chemical toxin spectrometry, and run Galton fingerprint matches.
+                </p>
+                <a href="{% url 'crime_lab' %}" class="btn btn-sm btn-outline-warning mt-3">
+                    Launch Crime Lab <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Division 2 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card card-detective p-4 h-100 d-flex flex-column border-info border-opacity-25">
+                <div class="suspect-avatar mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                    <i class="bi bi-briefcase-fill text-info"></i>
+                </div>
+                <h5 class="text-light fw-bold mb-2">Classified Archives</h5>
+                <p class="text-muted small flex-grow-1">
+                    Explore 5 distinct fictional mystery cases spanning Easy, Medium, and Hard difficulty with comprehensive lore.
+                </p>
+                <a href="{% url 'case_list' %}" class="btn btn-sm btn-outline-info mt-3">
+                    Browse All Cases <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Division 3 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card card-detective p-4 h-100 d-flex flex-column border-primary border-opacity-25">
+                <div class="suspect-avatar mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                    <i class="bi bi-search text-primary"></i>
+                </div>
+                <h5 class="text-light fw-bold mb-2">Live Search Console</h5>
+                <p class="text-muted small flex-grow-1">
+                    Asynchronous Fetch API real-time search across all cases, physical clues, forensic evidence, and suspect profiles.
+                </p>
+                <a href="{% url 'search_page' %}" class="btn btn-sm btn-outline-light mt-3">
+                    Open Live Search <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Division 4 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card card-detective p-4 h-100 d-flex flex-column border-success border-opacity-25">
+                <div class="suspect-avatar mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                    <i class="bi bi-trophy-fill text-success"></i>
+                </div>
+                <h5 class="text-light fw-bold mb-2">Bureau Leaderboard</h5>
+                <p class="text-muted small flex-grow-1">
+                    Track global detective standings, view medal rankings, and export full performance statistics to CSV.
+                </p>
+                <a href="{% url 'leaderboard' %}" class="btn btn-sm btn-outline-success mt-3">
+                    View Rankings <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Cases with Difficulty Badges -->
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h6 class="text-warning text-uppercase fw-bold">Active Inquiries</h6>
+            <h2 class="text-light mb-0" style="font-family: 'Cinzel', serif;">FEATURED INVESTIGATION CASES</h2>
+        </div>
+        <a href="{% url 'case_list' %}" class="btn btn-outline-gold btn-sm">
+            View All Cases <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for case in featured_cases %}
+        <div class="col-md-4">
+            <div class="card card-detective h-100 d-flex flex-column">
+                <div class="card-header-detective d-flex justify-content-between align-items-center">
+                    <span class="badge {% if case.difficulty == 'Easy' %}badge-diff-easy{% elif case.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %}">
+                        {{ case.difficulty }} Difficulty ({{ case.base_points }} pts)
+                    </span>
+                    <span class="badge bg-dark border border-secondary text-light">
+                        Case #{{ case.id|stringformat:"02d" }}
+                    </span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-light fw-bold mb-2">
+                        <a href="{% url 'case_detail' case.id %}" class="text-light">{{ case.title }}</a>
+                    </h5>
+                    <p class="card-text small flex-grow-1" style="color: #cbd5e1 !important;">
+                        {{ case.description|truncatewords:24 }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-50 mt-3">
+                        <div class="small" style="color: #94a3b8;">
+                            <i class="bi bi-people text-warning me-1"></i> {{ case.suspects.count }} Suspects
+                            <span class="mx-1">•</span>
+                            <i class="bi bi-search text-info me-1"></i> {{ case.clues.count }} Clues
+                        </div>
+                        <a href="{% url 'case_detail' case.id %}" class="btn btn-sm btn-outline-gold">
+                            Inspect <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Leaderboard Preview Section -->
+<section class="container my-5">
+    <div class="card card-detective p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h6 class="text-warning text-uppercase fw-bold mb-1">Bureau Records</h6>
+                <h3 class="text-light mb-0" style="font-family: 'Cinzel', serif;">HALL OF FAME LEADERBOARD</h3>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'export_leaderboard_csv' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                </a>
+                <a href="{% url 'leaderboard' %}" class="btn btn-sm btn-gold">
+                    Full Leaderboard <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-noir table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Detective</th>
+                        <th>Rank Title</th>
+                        <th>Badge Tier</th>
+                        <th class="text-center">Cases Solved</th>
+                        <th class="text-end">Total Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for det in top_detectives %}
+                    <tr {% if user.is_authenticated and det.user == user %}class="current-user-row"{% endif %}>
+                        <td class="fw-bold">
+                            {% if forloop.counter == 1 %}
+                                <i class="bi bi-trophy-fill rank-badge-1"></i> <span class="text-warning">#1</span>
+                            {% elif forloop.counter == 2 %}
+                                <i class="bi bi-trophy-fill rank-badge-2"></i> <span class="text-secondary fw-bold">#2</span>
+                            {% elif forloop.counter == 3 %}
+                                <i class="bi bi-trophy-fill rank-badge-3"></i> <span class="text-danger">#3</span>
+                            {% else %}
+                                <span class="text-dark fw-bold">#{{ forloop.counter }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-person-circle text-warning fs-5"></i>
+                                <span class="fw-bold text-dark fs-6">{{ det.user.username }}</span>
+                                {% if det.user.username == 'vansh123' %}
+                                    <span class="badge bg-warning text-dark small fw-bold">LEAD</span>
+                                {% endif %}
+                                {% if user.is_authenticated and det.user == user %}
+                                    <span class="badge bg-warning text-dark small fw-bold">YOU</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><span class="badge badge-gold">{{ det.rank }}</span></td>
+                        <td><span class="badge bg-dark border border-secondary text-info">{{ det.badge_level }}</span></td>
+                        <td class="text-center fw-bold text-primary fs-6">{{ det.cases_solved }}</td>
+                        <td class="text-end fw-bold text-dark fs-6">{{ det.total_score }} pts</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No detectives ranked yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

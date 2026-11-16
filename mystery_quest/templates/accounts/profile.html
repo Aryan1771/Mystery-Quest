@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Detective Dossier – {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Top Dossier Header Card -->
+    <div class="card card-detective p-4 mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-auto">
+                <div class="suspect-avatar" style="width: 80px; height: 80px; font-size: 2.2rem;">
+                    <i class="bi bi-person-badge-fill text-warning"></i>
+                </div>
+            </div>
+            <div class="col">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <h3 class="text-light fw-bold mb-0">{{ user.username }}</h3>
+                    <span class="badge badge-gold fs-6">{{ profile.rank }}</span>
+                    <span class="badge bg-dark border border-secondary text-info">{{ profile.badge_level }} Tier</span>
+                    {% if user.is_staff %}
+                    <span class="badge bg-danger">Staff Administrator</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-0">Enlisted Member of Mystery Quest Bureau of Investigation</p>
+                <div class="mt-2 text-light small fst-italic">"{{ profile.bio }}"</div>
+            </div>
+            <div class="col-md-auto text-md-end">
+                <div class="d-flex gap-4 justify-content-md-end text-center">
+                    <div>
+                        <div class="text-warning fw-bold fs-3">{{ profile.total_score }}</div>
+                        <div class="text-muted small text-uppercase">Total Score</div>
+                    </div>
+                    <div>
+                        <div class="text-success fw-bold fs-3">{{ profile.cases_solved }}</div>
+                        <div class="text-muted small text-uppercase">Cases Solved</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Case Progress & Investigation Docket -->
+        <div class="col-lg-8">
+            <div class="card card-detective p-4 mb-4">
+                <h5 class="text-light fw-bold mb-3" style="font-family: 'Cinzel', serif;">
+                    <i class="bi bi-journal-album text-warning me-2"></i> INVESTIGATION PROGRESS DOCKET
+                </h5>
+
+                <div class="table-responsive">
+                    <table class="table table-noir table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Case Title</th>
+                                <th>Difficulty</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Clues</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prog in user_progresses %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'investigate' prog.case.id %}" class="fw-bold text-dark fs-6">
+                                        <i class="bi bi-folder2-open text-warning me-1"></i> {{ prog.case.title }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge {% if prog.case.difficulty == 'Easy' %}badge-diff-easy{% elif prog.case.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %}">
+                                        {{ prog.case.difficulty }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if prog.completion_status == 'Solved' %}
+                                        <span class="badge bg-success text-light">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Solved
+                                        </span>
+                                    {% elif prog.completion_status == 'Failed' %}
+                                        <span class="badge bg-danger text-light">
+                                            <i class="bi bi-x-circle-fill me-1"></i> Failed
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark fw-bold">
+                                            <i class="bi bi-hourglass-split me-1"></i> In Progress
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold text-dark">{{ prog.score }} pts</td>
+                                <td class="fw-bold text-dark">{{ prog.collected_clues.count }} / {{ prog.case.clues.count }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'investigate' prog.case.id %}" class="btn btn-outline-dark" title="Enter Crime Room">
+                                            <i class="bi bi-box-arrow-in-right"></i> Enter
+                                        </a>
+                                        <a href="{% url 'generate_case_pdf' prog.case.id %}" class="btn btn-outline-danger" title="Download PDF Report">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    You have not initiated any investigations yet.
+                                    <div class="mt-2">
+                                        <a href="{% url 'case_list' %}" class="btn btn-sm btn-gold">Browse Active Cases</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Accusation History -->
+            <div class="card card-detective p-4">
+                <h5 class="text-light fw-bold mb-3" style="font-family: 'Cinzel', serif;">
+                    <i class="bi bi-gavel text-warning me-2"></i> FILED ACCUSATIONS LOG
+                </h5>
+
+                {% if accusations %}
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for acc in accusations %}
+                    <div class="list-group-item bg-transparent border-secondary text-light px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold">
+                                {{ acc.case.title }} — Accused: <span class="text-warning">{{ acc.selected_suspect.name }}</span>
+                            </h6>
+                            {% if acc.correctness %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> CORRECT (Guilty)</span>
+                            {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-lg"></i> WRONG SUSPECT</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted small mb-1">
+                            <i>"{{ acc.deduction_notes|default:'No deduction notes entered.' }}"</i>
+                        </p>
+                        <span class="text-dim small">{{ acc.submission_date|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">No formal accusations recorded in judicial archives.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Bio & Profile Settings -->
+        <div class="col-lg-4">
+            <div class="card card-detective p-4 mb-4">
+                <h5 class="text-light fw-bold mb-3" style="font-family: 'Cinzel', serif;">
+                    <i class="bi bi-pencil-square text-warning me-2"></i> UPDATE DOSSIER BIO
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-light small fw-bold">Detective Specialization / Bio</label>
+                        {{ form.bio }}
+                    </div>
+                    <button type="submit" class="btn btn-gold btn-sm w-100">
+                        <i class="bi bi-save me-1"></i> Save Dossier Updates
+                    </button>
+                </form>
+            </div>
+
+            <div class="card card-detective p-4">
+                <h6 class="text-warning text-uppercase fw-bold mb-2">Rank Hierarchy</h6>
+                <div class="small text-muted mb-3">Earn points by solving cases with high clue collection and minimal hints:</div>
+                <ul class="list-unstyled small mb-0">
+                    <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                        <span class="text-light">Master Detective</span>
+                        <span class="text-warning fw-bold">800+ pts</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                        <span class="text-light">Chief Inspector</span>
+                        <span class="text-warning fw-bold">500 - 799 pts</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                        <span class="text-light">Senior Investigator</span>
+                        <span class="text-warning fw-bold">250 - 499 pts</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                        <span class="text-light">Junior Detective</span>
+                        <span class="text-warning fw-bold">100 - 249 pts</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-1">
+                        <span class="text-light">Rookie Sleuth</span>
+                        <span class="text-warning fw-bold">0 - 99 pts</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

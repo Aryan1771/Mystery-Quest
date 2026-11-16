@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Case Management Center – Mystery Quest{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <span class="badge bg-danger text-uppercase mb-1">Administrative Authority</span>
+            <h2 class="text-light mb-0" style="font-family: 'Cinzel', serif;">CENTRAL MANAGEMENT DASHBOARD</h2>
+            <p class="text-muted small mb-0">Authorized personnel only: Create, Read, Update, and Delete investigation cases, clues, and suspects.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'case_create' %}" class="btn btn-gold btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Case
+            </a>
+            <a href="{% url 'clue_create' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Clue
+            </a>
+            <a href="{% url 'suspect_create' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Suspect
+            </a>
+        </div>
+    </div>
+
+    <!-- Management Tabs -->
+    <div class="card card-detective overflow-hidden">
+        <ul class="nav nav-tabs investigation-tabs p-2 border-bottom border-secondary" id="crudTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="crud-cases-tab" data-bs-toggle="tab" data-bs-target="#crud-cases" type="button" role="tab">
+                    <i class="bi bi-briefcase me-1"></i> Cases ({{ cases.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="crud-clues-tab" data-bs-toggle="tab" data-bs-target="#crud-clues" type="button" role="tab">
+                    <i class="bi bi-search me-1"></i> Clues ({{ clues.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="crud-suspects-tab" data-bs-toggle="tab" data-bs-target="#crud-suspects" type="button" role="tab">
+                    <i class="bi bi-people me-1"></i> Suspects ({{ suspects.count }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content p-4" id="crudTabContent">
+            <!-- 1. Cases Tab -->
+            <div class="tab-pane fade show active" id="crud-cases" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-light fw-bold mb-0">Investigation Cases Docket</h5>
+                    <a href="{% url 'case_create' %}" class="btn btn-sm btn-gold"><i class="bi bi-plus-lg me-1"></i> Add Case</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-noir table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th># ID</th>
+                                <th>Title</th>
+                                <th>Difficulty</th>
+                                <th>Status</th>
+                                <th>Correct Culprit</th>
+                                <th>Clues</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in cases %}
+                            <tr>
+                                <td class="text-dark fw-bold">#{{ c.id|stringformat:"03d" }}</td>
+                                <td><a href="{% url 'case_detail' c.id %}" class="fw-bold text-dark fs-6">{{ c.title }}</a></td>
+                                <td>
+                                    <span class="badge {% if c.difficulty == 'Easy' %}badge-diff-easy{% elif c.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %}">
+                                        {{ c.difficulty }}
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ c.status }}</span></td>
+                                <td class="text-dark fw-bold">{{ c.correct_suspect.name|default:"Unassigned" }}</td>
+                                <td class="fw-bold text-dark">{{ c.clues.count }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'case_update' c.id %}" class="btn btn-outline-warning" title="Edit Case">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'case_delete' c.id %}" class="btn btn-outline-danger" title="Delete Case">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center text-muted py-4">No cases registered.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. Clues Tab -->
+            <div class="tab-pane fade" id="crud-clues" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-light fw-bold mb-0">Clues & Forensic Traces</h5>
+                    <a href="{% url 'clue_create' %}" class="btn btn-sm btn-gold"><i class="bi bi-plus-lg me-1"></i> Add Clue</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-noir table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Case</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cl in clues %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ cl.title }}</td>
+                                <td><span class="text-secondary small fw-medium">{{ cl.case.title }}</span></td>
+                                <td><span class="badge bg-dark border border-secondary text-info">{{ cl.clue_type }}</span></td>
+                                <td class="text-dark small">{{ cl.description|truncatewords:8 }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'clue_update' cl.id %}" class="btn btn-outline-warning" title="Edit Clue">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'clue_delete' cl.id %}" class="btn btn-outline-danger" title="Delete Clue">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">No clues registered.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. Suspects Tab -->
+            <div class="tab-pane fade" id="crud-suspects" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-light fw-bold mb-0">Suspect Profiles</h5>
+                    <a href="{% url 'suspect_create' %}" class="btn btn-sm btn-gold"><i class="bi bi-plus-lg me-1"></i> Register Suspect</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-noir table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Suspect Name</th>
+                                <th>Profile Summary</th>
+                                <th>Motive</th>
+                                <th>True Culprit?</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in suspects %}
+                            <tr>
+                                <td class="fw-bold text-dark fs-6">{{ s.name }}</td>
+                                <td class="text-dark small">{{ s.profile|truncatewords:7 }}</td>
+                                <td class="text-dark small">{{ s.motive|truncatewords:7 }}</td>
+                                <td>
+                                    {% if s.is_culprit %}
+                                        <span class="badge bg-danger">YES (True Culprit)</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Innocent</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'suspect_update' s.id %}" class="btn btn-outline-warning" title="Edit Suspect">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'suspect_delete' s.id %}" class="btn btn-outline-danger" title="Delete Suspect">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">No suspects registered.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
