@@ -27,7 +27,7 @@
         <h1 class="display-4 fw-bold text-light mb-3" style="font-family: 'Cinzel', serif;">
             THE CRIME SCENE AWAITS, <span class="text-warning">DETECTIVE</span>
         </h1>
-        <p class="lead text-muted mx-auto mb-4" style="max-width: 760px; font-size: 1.15rem;">
+        <p class="lead text-white mx-auto mb-4" style="max-width: 760px; font-size: 1.15rem;">
             Step into the shoes of an investigator. Unravel cold cases, uncover concealed forensic clues, 
             run laboratory ciphers, expose deceptive alibis, and bring fictional culprits to justice before the court.
         </p>
@@ -55,19 +55,19 @@
         <div class="row text-center g-3">
             <div class="col-md-3 col-6">
                 <h3 class="text-warning fw-bold mb-0">{{ total_cases }}</h3>
-                <span class="text-muted small text-uppercase">Active Mystery Cases</span>
+                <span class="text-white small text-uppercase">Active Mystery Cases</span>
             </div>
             <div class="col-md-3 col-6">
                 <h3 class="text-success fw-bold mb-0">{{ total_solved }}</h3>
-                <span class="text-muted small text-uppercase">Cases Solved</span>
+                <span class="text-white small text-uppercase">Cases Solved</span>
             </div>
             <div class="col-md-3 col-6">
                 <h3 class="text-info fw-bold mb-0">{{ top_detectives.count }}</h3>
-                <span class="text-muted small text-uppercase">Ranked Detectives</span>
+                <span class="text-white small text-uppercase">Ranked Detectives</span>
             </div>
             <div class="col-md-3 col-6">
                 <h3 class="text-light fw-bold mb-0">100%</h3>
-                <span class="text-muted small text-uppercase">Fictional & Academic</span>
+                <span class="text-white small text-uppercase">Fictional & Academic</span>
             </div>
         </div>
     </div>
@@ -89,7 +89,7 @@
                             <span class="badge bg-warning text-dark fw-bold">{{ user_stats.profile.rank }}</span>
                             <span class="badge bg-dark border border-secondary text-info">{{ user_stats.profile.badge_level }} Tier</span>
                         </div>
-                        <div class="text-muted small">
+                        <div class="text-white small">
                             Total Score: <b class="text-warning">{{ user_stats.profile.total_score }} pts</b> &nbsp;|&nbsp; 
                             Solved: <b class="text-success">{{ user_stats.profile.cases_solved }} cases</b> &nbsp;|&nbsp;
                             Active Inquiries: <b class="text-info">{{ user_stats.active_investigations }}</b>
@@ -121,7 +121,7 @@
     <div class="text-center mb-4">
         <h6 class="text-warning text-uppercase fw-bold letter-spacing-1">Investigation Divisions</h6>
         <h2 class="text-light" style="font-family: 'Cinzel', serif;">CENTRAL INVESTIGATION SUITE</h2>
-        <p class="text-muted small mx-auto" style="max-width: 600px;">
+        <p class="text-white small mx-auto" style="max-width: 600px;">
             Access specialized headquarters divisions to gather evidence, decipher hidden messages, search case archives, and download certified reports.
         </p>
     </div>
@@ -134,7 +134,7 @@
                     <i class="bi bi-cpu-fill text-warning"></i>
                 </div>
                 <h5 class="text-light fw-bold mb-2">Forensic Crime Lab</h5>
-                <p class="text-muted small flex-grow-1">
+                <p class="text-white small flex-grow-1">
                     Decrypt Caesar & Base64 ciphers, analyze chemical toxin spectrometry, and run Galton fingerprint matches.
                 </p>
                 <a href="{% url 'crime_lab' %}" class="btn btn-sm btn-outline-warning mt-3">
@@ -150,7 +150,7 @@
                     <i class="bi bi-briefcase-fill text-info"></i>
                 </div>
                 <h5 class="text-light fw-bold mb-2">Classified Archives</h5>
-                <p class="text-muted small flex-grow-1">
+                <p class="text-white small flex-grow-1">
                     Explore 5 distinct fictional mystery cases spanning Easy, Medium, and Hard difficulty with comprehensive lore.
                 </p>
                 <a href="{% url 'case_list' %}" class="btn btn-sm btn-outline-info mt-3">
@@ -166,7 +166,7 @@
                     <i class="bi bi-search text-primary"></i>
                 </div>
                 <h5 class="text-light fw-bold mb-2">Live Search Console</h5>
-                <p class="text-muted small flex-grow-1">
+                <p class="text-white small flex-grow-1">
                     Asynchronous Fetch API real-time search across all cases, physical clues, forensic evidence, and suspect profiles.
                 </p>
                 <a href="{% url 'search_page' %}" class="btn btn-sm btn-outline-light mt-3">
@@ -182,7 +182,7 @@
                     <i class="bi bi-trophy-fill text-success"></i>
                 </div>
                 <h5 class="text-light fw-bold mb-2">Bureau Leaderboard</h5>
-                <p class="text-muted small flex-grow-1">
+                <p class="text-white small flex-grow-1">
                     Track global detective standings, view medal rankings, and export full performance statistics to CSV.
                 </p>
                 <a href="{% url 'leaderboard' %}" class="btn btn-sm btn-outline-success mt-3">
@@ -304,7 +304,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">No detectives ranked yet.</td>
+                        <td colspan="6" class="text-center text-white py-4">No detectives ranked yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

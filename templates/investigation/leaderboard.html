@@ -31,7 +31,7 @@
                 <div>
                     <span class="badge bg-warning text-dark fw-bold me-2">Your Position</span>
                     <h5 class="d-inline text-light fw-bold mb-0">Rank #{{ current_user_rank }} of {{ detectives.count }} Detectives</h5>
-                    <div class="small text-muted mt-1">
+                    <div class="small text-white mt-1">
                         Rank Title: <b class="text-light">{{ user.profile.rank }}</b> | 
                         Total Score: <b class="text-warning">{{ user.profile.total_score }} pts</b> | 
                         Cases Solved: <b class="text-info">{{ user.profile.cases_solved }}</b>
@@ -106,7 +106,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
+                        <td colspan="7" class="text-center text-white py-5">
                             No detectives currently ranked. Be the first to solve a case!
                         </td>
                     </tr>

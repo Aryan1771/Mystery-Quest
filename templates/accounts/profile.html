@@ -21,18 +21,18 @@
                     <span class="badge bg-danger">Staff Administrator</span>
                     {% endif %}
                 </div>
-                <p class="text-muted small mb-0">Enlisted Member of Mystery Quest Bureau of Investigation</p>
+                <p class="text-white small mb-0">Enlisted Member of Mystery Quest Bureau of Investigation</p>
                 <div class="mt-2 text-light small fst-italic">"{{ profile.bio }}"</div>
             </div>
             <div class="col-md-auto text-md-end">
                 <div class="d-flex gap-4 justify-content-md-end text-center">
                     <div>
                         <div class="text-warning fw-bold fs-3">{{ profile.total_score }}</div>
-                        <div class="text-muted small text-uppercase">Total Score</div>
+                        <div class="text-white small text-uppercase">Total Score</div>
                     </div>
                     <div>
                         <div class="text-success fw-bold fs-3">{{ profile.cases_solved }}</div>
-                        <div class="text-muted small text-uppercase">Cases Solved</div>
+                        <div class="text-white small text-uppercase">Cases Solved</div>
                     </div>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
+                                <td colspan="6" class="text-center text-white py-4">
                                     You have not initiated any investigations yet.
                                     <div class="mt-2">
                                         <a href="{% url 'case_list' %}" class="btn btn-sm btn-gold">Browse Active Cases</a>
@@ -135,7 +135,7 @@
                                 <span class="badge bg-danger"><i class="bi bi-x-lg"></i> WRONG SUSPECT</span>
                             {% endif %}
                         </div>
-                        <p class="text-muted small mb-1">
+                        <p class="text-white small mb-1">
                             <i>"{{ acc.deduction_notes|default:'No deduction notes entered.' }}"</i>
                         </p>
                         <span class="text-dim small">{{ acc.submission_date|date:"Y-m-d H:i" }}</span>
@@ -143,7 +143,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted small mb-0">No formal accusations recorded in judicial archives.</p>
+                <p class="text-white small mb-0">No formal accusations recorded in judicial archives.</p>
                 {% endif %}
             </div>
         </div>
@@ -168,7 +168,7 @@
 
             <div class="card card-detective p-4">
                 <h6 class="text-warning text-uppercase fw-bold mb-2">Rank Hierarchy</h6>
-                <div class="small text-muted mb-3">Earn points by solving cases with high clue collection and minimal hints:</div>
+                <div class="small text-white mb-3">Earn points by solving cases with high clue collection and minimal hints:</div>
                 <ul class="list-unstyled small mb-0">
                     <li class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
                         <span class="text-light">Master Detective</span>

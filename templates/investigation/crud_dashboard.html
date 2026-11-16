@@ -9,7 +9,7 @@
         <div>
             <span class="badge bg-danger text-uppercase mb-1">Administrative Authority</span>
             <h2 class="text-light mb-0" style="font-family: 'Cinzel', serif;">CENTRAL MANAGEMENT DASHBOARD</h2>
-            <p class="text-muted small mb-0">Authorized personnel only: Create, Read, Update, and Delete investigation cases, clues, and suspects.</p>
+            <p class="text-white small mb-0">Authorized personnel only: Create, Read, Update, and Delete investigation cases, clues, and suspects.</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'case_create' %}" class="btn btn-gold btn-sm">
@@ -89,7 +89,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="7" class="text-center text-muted py-4">No cases registered.</td></tr>
+                            <tr><td colspan="7" class="text-center text-white py-4">No cases registered.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -132,7 +132,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="text-center text-muted py-4">No clues registered.</td></tr>
+                            <tr><td colspan="5" class="text-center text-white py-4">No clues registered.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -181,7 +181,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="text-center text-muted py-4">No suspects registered.</td></tr>
+                            <tr><td colspan="5" class="text-center text-white py-4">No suspects registered.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

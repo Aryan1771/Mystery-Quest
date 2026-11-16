@@ -21,7 +21,7 @@
                     <span class="badge {% if case.difficulty == 'Easy' %}badge-diff-easy{% elif case.difficulty == 'Medium' %}badge-diff-medium{% else %}badge-diff-hard{% endif %} fs-6">
                         {{ case.difficulty }} Difficulty ({{ case.base_points }} pts)
                     </span>
-                    <span class="badge bg-dark border border-secondary text-muted">Case ID: #{{ case.id|stringformat:"04d" }}</span>
+                    <span class="badge bg-dark border border-secondary text-white">Case ID: #{{ case.id|stringformat:"04d" }}</span>
                 </div>
 
                 <h2 class="text-light fw-bold mb-3" style="font-family: 'Cinzel', serif;">{{ case.title }}</h2>
@@ -30,7 +30,7 @@
                 <p class="text-light lead fs-6 mb-4">{{ case.description }}</p>
 
                 <h6 class="text-warning text-uppercase fw-bold mb-2">Lore, Setting & Scene Background</h6>
-                <div class="p-3 rounded bg-dark border border-secondary mb-4 text-muted small" style="line-height: 1.7;">
+                <div class="p-3 rounded bg-dark border border-secondary mb-4 text-white small" style="line-height: 1.7;">
                     {{ case.background|linebreaks }}
                 </div>
 
@@ -62,19 +62,19 @@
                 <h6 class="text-warning text-uppercase fw-bold mb-3">Investigation Docket</h6>
                 <ul class="list-unstyled mb-0">
                     <li class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
-                        <span class="text-muted"><i class="bi bi-people me-2 text-warning"></i> Suspects Profiled</span>
+                        <span class="text-white"><i class="bi bi-people me-2 text-warning"></i> Suspects Profiled</span>
                         <span class="fw-bold text-light">{{ suspects_count }}</span>
                     </li>
                     <li class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
-                        <span class="text-muted"><i class="bi bi-search me-2 text-info"></i> Physical / Digital Clues</span>
+                        <span class="text-white"><i class="bi bi-search me-2 text-info"></i> Physical / Digital Clues</span>
                         <span class="fw-bold text-light">{{ clues_count }}</span>
                     </li>
                     <li class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
-                        <span class="text-muted"><i class="bi bi-chat-quote me-2 text-success"></i> Witness Statements</span>
+                        <span class="text-white"><i class="bi bi-chat-quote me-2 text-success"></i> Witness Statements</span>
                         <span class="fw-bold text-light">{{ case.witness_statements.count }}</span>
                     </li>
                     <li class="d-flex justify-content-between py-2">
-                        <span class="text-muted"><i class="bi bi-award me-2 text-danger"></i> Base Reward</span>
+                        <span class="text-white"><i class="bi bi-award me-2 text-danger"></i> Base Reward</span>
                         <span class="fw-bold text-warning">{{ case.base_points }} pts</span>
                     </li>
                 </ul>
@@ -92,12 +92,12 @@
                             </div>
                             <div>
                                 <h6 class="mb-0 fw-bold">{{ suspect.name }}</h6>
-                                <span class="small text-muted">{{ suspect.profile|truncatewords:6 }}</span>
+                                <span class="small text-white">{{ suspect.profile|truncatewords:6 }}</span>
                             </div>
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-muted small">No suspects cataloged.</p>
+                    <p class="text-white small">No suspects cataloged.</p>
                     {% endfor %}
                 </div>
             </div>

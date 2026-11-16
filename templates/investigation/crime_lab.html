@@ -12,7 +12,7 @@
                 <i class="bi bi-cpu-fill me-1"></i> Advanced Forensics Division
             </span>
             <h2 class="text-light mb-0" style="font-family: 'Cinzel', serif;">BUREAU CRIME LAB & DECRYPTION STATION</h2>
-            <p class="text-muted small mb-0">Interactive forensic analysis station: decrypt coded ciphers, analyze chemical toxins, and compare latent fingerprints.</p>
+            <p class="text-white small mb-0">Interactive forensic analysis station: decrypt coded ciphers, analyze chemical toxins, and compare latent fingerprints.</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'case_list' %}" class="btn btn-outline-gold btn-sm">
@@ -52,7 +52,7 @@
                     <div class="col-lg-6">
                         <div class="card card-detective p-4 h-100">
                             <h5 class="text-light fw-bold mb-2">Encrypted Cipher Input</h5>
-                            <p class="text-muted small mb-3">Paste ciphertext recovered from crime scenes or load a case evidence cipher preset:</p>
+                            <p class="text-white small mb-3">Paste ciphertext recovered from crime scenes or load a case evidence cipher preset:</p>
 
                             <!-- Presets -->
                             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -102,13 +102,13 @@
                                 <h5 class="text-success fw-bold mb-0">Decoded Plaintext Output</h5>
                                 <span id="cipherTypeBadge" class="badge bg-dark border border-success text-success">Standby</span>
                             </div>
-                            <p class="text-muted small mb-3">Live decrypted intelligence extracted by the Bureau cryptographic engine:</p>
+                            <p class="text-white small mb-3">Live decrypted intelligence extracted by the Bureau cryptographic engine:</p>
 
                             <div class="p-3 rounded bg-dark border border-secondary font-monospace text-light flex-grow-1" style="min-height: 160px; font-size: 1rem; line-height: 1.6;" id="cipherOutput">
                                 [Awaiting cryptographic processing...]
                             </div>
 
-                            <div id="cipherVerdictAlert" class="alert alert-dark border-secondary small mt-3 mb-0 text-muted">
+                            <div id="cipherVerdictAlert" class="alert alert-dark border-secondary small mt-3 mb-0 text-white">
                                 <i class="bi bi-info-circle text-warning me-1"></i> Decrypted transcripts can be entered into your investigative notes in the Crime Room.
                             </div>
                         </div>
@@ -120,7 +120,7 @@
             <div class="tab-pane fade" id="toxin-pane" role="tabpanel">
                 <div class="mb-3">
                     <h5 class="text-light fw-bold mb-1">Crime Scene Toxicological Database</h5>
-                    <p class="text-muted small mb-0">Spectrometric analysis of synthetic poisons, industrial residues, and trace chemicals found in active dockets.</p>
+                    <p class="text-white small mb-0">Spectrometric analysis of synthetic poisons, industrial residues, and trace chemicals found in active dockets.</p>
                 </div>
 
                 <div class="row g-4">
@@ -132,7 +132,7 @@
                                 <span class="badge bg-danger">Lethal Neurotoxin</span>
                             </div>
                             <div class="font-monospace text-warning small mb-2">Formula: C34H47NO11</div>
-                            <p class="text-muted small mb-3">
+                            <p class="text-white small mb-3">
                                 Potent plant alkaloid targeting voltage-gated sodium channels. Causes immediate arrhythmia and respiratory paralysis.
                             </p>
                             <div class="p-2 rounded bg-dark border border-secondary small text-light mb-3">
@@ -152,7 +152,7 @@
                                 <span class="badge bg-warning text-dark">Pyrotechnic Smoke</span>
                             </div>
                             <div class="font-monospace text-warning small mb-2">Formula: KNO3 + S + C</div>
-                            <p class="text-muted small mb-3">
+                            <p class="text-white small mb-3">
                                 Classic deflagrating composition used in smoke flares. Leaves distinctive sulfurous crystalline residue on clothing fibers.
                             </p>
                             <div class="p-2 rounded bg-dark border border-secondary small text-light mb-3">
@@ -172,7 +172,7 @@
                                 <span class="badge bg-info text-dark">Industrial Lubricant</span>
                             </div>
                             <div class="font-monospace text-warning small mb-2">Formula: Cetyl Palmitate Ester</div>
-                            <p class="text-muted small mb-3">
+                            <p class="text-white small mb-3">
                                 Rare high-viscosity horological lubricant synthesized specifically for delicate clockwork and automaton differential gears.
                             </p>
                             <div class="p-2 rounded bg-dark border border-secondary small text-light mb-3">
@@ -192,7 +192,7 @@
                     <div class="col-lg-6">
                         <div class="card card-detective p-4">
                             <h5 class="text-light fw-bold mb-2">Latent Ridge Comparison Engine</h5>
-                            <p class="text-muted small mb-4">Select recovered latent print from evidence lockers and compare ridge bifurcations against suspect database files:</p>
+                            <p class="text-white small mb-4">Select recovered latent print from evidence lockers and compare ridge bifurcations against suspect database files:</p>
 
                             <div class="mb-3">
                                 <label class="form-label text-light small fw-bold">1. Select Recovered Crime Scene Trace:</label>
@@ -226,10 +226,10 @@
                                 <i class="bi bi-fingerprint text-warning" id="fpIcon"></i>
                             </div>
                             <h5 class="text-light fw-bold mb-1" id="fpHeadline">Biometric Scanner Ready</h5>
-                            <p class="text-muted small mb-3" id="fpSubtext">Execute comparison to calculate Galton ridge match score.</p>
+                            <p class="text-white small mb-3" id="fpSubtext">Execute comparison to calculate Galton ridge match score.</p>
                             
                             <div class="p-3 rounded bg-dark border border-secondary mb-3 d-none" id="fpScoreBox">
-                                <div class="text-muted small text-uppercase mb-1">Match Confidence:</div>
+                                <div class="text-white small text-uppercase mb-1">Match Confidence:</div>
                                 <h2 class="fw-bold mb-0 text-success" id="fpScorePercent">99.4%</h2>
                                 <span class="badge bg-success mt-2" id="fpMatchBadge">POSITIVE MATCH</span>
                             </div>
