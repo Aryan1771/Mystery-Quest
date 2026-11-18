@@ -1176,6 +1176,10 @@ def seed_cases(apps, schema_editor):
 ]
 
     for item in data:
+        # A few case records intentionally contain only one witness. Treat
+        # the second witness as optional instead of aborting the whole seed.
+        if len(item) == 14:
+            item = (*item, None)
         (title, difficulty, description, background, solution, names, profiles,
          motives, alibis, clue_texts, clue_types, evidence_texts, evidence_suspects,
          witness_one, witness_two) = item
@@ -1212,6 +1216,8 @@ def seed_cases(apps, schema_editor):
                           "suspect": suspects[evidence_suspects[index]]},
             )
         for witness in (witness_one, witness_two):
+            if witness is None:
+                continue
             WitnessStatement.objects.using(db).get_or_create(
                 case=case, witness_name=witness[0],
                 defaults={"statement": witness[1], "credibility": witness[2]},
