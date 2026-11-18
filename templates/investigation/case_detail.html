@@ -37,10 +37,13 @@
                 <!-- Call to Action -->
                 <div class="d-flex flex-wrap gap-3 align-items-center pt-3 border-top border-secondary">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'start_investigation' case.id %}" class="btn btn-gold btn-lg px-4">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>
-                            {% if progress %}Resume Investigation{% else %}Commence Investigation{% endif %}
-                        </a>
+                        {% if progress and progress.completion_status != 'Solved' and case_allowed %}
+                        <a href="{% url 'investigate' case.id %}" class="btn btn-gold btn-lg px-4">Resume Active Investigation</a>
+                        {% elif case_allowed %}
+                        <a href="{% url 'start_investigation' case.id %}" class="btn btn-gold btn-lg px-4">Select This Case</a>
+                        {% else %}
+                        <div class="alert alert-warning mb-0">{{ lock_reason }}</div>
+                        {% endif %}
                         {% if progress %}
                         <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-outline-danger">
                             <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Dossier
