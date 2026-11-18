@@ -45,9 +45,11 @@
                         <div class="alert alert-warning mb-0">{{ lock_reason }}</div>
                         {% endif %}
                         {% if progress %}
-                        <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-outline-danger">
-                            <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Dossier
-                        </a>
+                            {% if progress.completion_status == 'Solved' or case_allowed %}
+                            <a href="{% url 'generate_case_pdf' case.id %}" class="btn btn-outline-danger">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Dossier
+                            </a>
+                            {% endif %}
                         {% endif %}
                     {% else %}
                         <a href="{% url 'login' %}?next={% url 'case_detail' case.id %}" class="btn btn-gold btn-lg px-4">
