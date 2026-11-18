@@ -58,8 +58,6 @@ class AccountTests(TestCase):
 
     def test_security_question_recovery_changes_password(self):
         from django.contrib.auth.hashers import check_password
-        from django.contrib.auth.models import UserProfile
-        from django.test import override_settings
 
         profile = self.user.profile
         profile.security_question = 'birth_city'
