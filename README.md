@@ -200,10 +200,10 @@ Visit your browser at: **`http://127.0.0.1:8000/`**
 
 | Role | Username | Password | Access Level |
 |---|---|---|---|
-| **Administrator / Staff** | `admin` | `admin123` | Full access + Django Admin + Management CRUD (`/manage/`) |
-| **Master Detective (Lead)** | `vansh123` | `vansh123` (or `detective123`) | Ranked #1 Lead Detective on leaderboard |
-| **Master Detective** | `hercule_p` | `detective123` | Ranked detective on leaderboard |
-| **New Detective** | *Register in UI* | *Chosen by you* | Standard detective permissions |
+| **Administrator / Staff** | *Create with Django's `createsuperuser` command* | *Set privately* | Full access + Django Admin + Management CRUD (`/manage/`) |
+| **Detective** | *Register in UI* | *Chosen privately by the user* | Standard detective permissions |
+
+Do not publish real or demo passwords in the repository. Django stores password hashes, not recoverable plaintext passwords.
 
 ---
 
