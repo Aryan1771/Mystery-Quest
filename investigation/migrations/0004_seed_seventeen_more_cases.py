@@ -1213,7 +1213,7 @@ def seed_cases(apps, schema_editor):
             Evidence.objects.using(db).get_or_create(
                 case=case, description=description_text,
                 defaults={"evidence_type": evidence_types[index],
-                          "suspect": suspects[evidence_suspects[index]]},
+                          "suspect": suspects.get(evidence_suspects[index])},
             )
         for witness in (witness_one, witness_two):
             if witness is None:
