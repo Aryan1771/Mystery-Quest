@@ -294,11 +294,18 @@ def ajax_search_view(request):
                 'url': f'/case/{c.id}/',
             })
 
+    # Clues and suspect intelligence are visible only for the player's active case.
+    active_case_id = None
+    if request.user.is_authenticated:
+        _, active_progress = _player_case_state(request.user)
+        active_case_id = active_progress.case_id if active_progress else None
+
     # Search Clues
-    if category in ['all', 'clues']:
+    if active_case_id and category in ['all', 'clues']:
         clues = Clue.objects.filter(
             Q(title__icontains=query) |
-            Q(description__icontains=query)
+            Q(description__icontains=query),
+            case_id=active_case_id
         ).select_related('case')[:6]
         for cl in clues:
             results['clues'].append({
@@ -312,12 +319,13 @@ def ajax_search_view(request):
             })
 
     # Search Suspects
-    if category in ['all', 'suspects']:
+    if active_case_id and category in ['all', 'suspects']:
         suspects = Suspect.objects.filter(
             Q(name__icontains=query) |
             Q(profile__icontains=query) |
-            Q(motive__icontains=query)
-        )[:6]
+            Q(motive__icontains=query),
+            cases__id=active_case_id
+        ).distinct()[:6]
         for s in suspects:
             results['suspects'].append({
                 'id': s.id,
