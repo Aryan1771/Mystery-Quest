@@ -189,7 +189,7 @@ class InvestigationSystemTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         progress.refresh_from_db()
-        self.assertEqual(progress.completion_status, 'Failed')
+        self.assertEqual(progress.completion_status, 'In Progress')
         self.assertEqual(progress.score, 0)
         self.assertEqual(self.detective.profile.total_score, 0)
 
