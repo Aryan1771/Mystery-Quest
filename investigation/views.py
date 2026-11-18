@@ -14,6 +14,45 @@ from .forms import CaseForm, ClueForm, SuspectForm, AccusationForm
 from .hint_engine import generate_investigative_hint
 
 
+# Rank-gated progression. A player may have only one unsolved case at a time.
+MINIMUM_CASE_RANK = {
+    'Easy': 0,
+    'Medium': 1,
+    'Hard': 3,
+}
+RANK_ORDER = {
+    'Rookie Sleuth': 0,
+    'Junior Detective': 1,
+    'Senior Investigator': 2,
+    'Chief Inspector': 3,
+    'Master Detective': 4,
+}
+
+
+def _player_case_state(user):
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    active = UserCaseProgress.objects.filter(user=user).exclude(
+        completion_status='Solved'
+    ).select_related('case').order_by('started_at').first()
+    return profile, active
+
+
+def _case_access(user, case):
+    profile, active = _player_case_state(user)
+    rank_level = RANK_ORDER.get(profile.rank, 0)
+    required_level = MINIMUM_CASE_RANK.get(case.difficulty, 0)
+    if active and active.case_id != case.id:
+        return False, active, f'Complete your active case: {active.case.title}.'
+    if rank_level < required_level:
+        required_rank = {
+            'Easy': 'Rookie Sleuth',
+            'Medium': 'Junior Detective',
+            'Hard': 'Chief Inspector',
+        }.get(case.difficulty, 'Rookie Sleuth')
+        return False, active, f'This {case.difficulty} case unlocks at {required_rank}. Your current rank is {profile.rank}.'
+    return True, active, ''
+
+
 def home_view(request):
     """Landing homepage with investigation highlights, detective stats, and top ranking detectives."""
     cases = Case.objects.all()[:3]
@@ -41,117 +80,104 @@ def home_view(request):
 
 
 def case_list_view(request):
-    """Displays all fictional investigation cases with filter by difficulty and search."""
+    """Show case previews; enforce rank eligibility and one active investigation."""
     difficulty = request.GET.get('difficulty', '')
     query = request.GET.get('q', '').strip()
-
     cases = Case.objects.all().prefetch_related('clues', 'suspects')
-
     if difficulty in ['Easy', 'Medium', 'Hard']:
         cases = cases.filter(difficulty=difficulty)
-
     if query:
-        cases = cases.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(background__icontains=query)
-        )
-
-    user_progress_map = {}
-    if request.user.is_authenticated:
-        progresses = UserCaseProgress.objects.filter(user=request.user)
-        for p in progresses:
-            user_progress_map[p.case_id] = p
+        cases = cases.filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(background__icontains=query))
 
     cases_with_status = []
-    for c in cases:
-        prog = user_progress_map.get(c.id)
-        cases_with_status.append({
-            'case': c,
-            'progress': prog,
-        })
+    profile = active = None
+    if request.user.is_authenticated:
+        profile, active = _player_case_state(request.user)
+        progress_map = {p.case_id: p for p in UserCaseProgress.objects.filter(user=request.user)}
+    else:
+        progress_map = {}
 
-    context = {
+    for case in cases:
+        progress = progress_map.get(case.id)
+        if request.user.is_authenticated:
+            allowed, active_case, lock_reason = _case_access(request.user, case)
+            playable = allowed and (not progress or progress.completion_status != 'Solved')
+        else:
+            active_case, lock_reason, playable = None, 'Log in to unlock investigations.', False
+        cases_with_status.append({
+            'case': case, 'progress': progress, 'playable': playable,
+            'locked': not playable, 'lock_reason': lock_reason,
+        })
+    return render(request, 'investigation/case_list.html', {
         'cases_with_status': cases_with_status,
-        'selected_difficulty': difficulty,
-        'search_query': query,
-    }
-    return render(request, 'investigation/case_list.html', context)
+        'selected_difficulty': difficulty, 'search_query': query,
+        'active_progress': active, 'player_profile': profile,
+    })
 
 
 def case_detail_view(request, case_id):
-    """Case dossier briefing and entry portal."""
     case = get_object_or_404(Case, id=case_id)
     progress = None
+    allowed, active, lock_reason = False, None, 'Log in to investigate.'
     if request.user.is_authenticated:
         progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
-
-    context = {
-        'case': case,
-        'progress': progress,
-        'suspects_count': case.suspects.count(),
-        'clues_count': case.clues.count(),
-    }
-    return render(request, 'investigation/case_detail.html', context)
+        allowed, active, lock_reason = _case_access(request.user, case)
+        if progress and progress.completion_status == 'Solved':
+            allowed, lock_reason = False, 'This case is already solved.'
+    return render(request, 'investigation/case_detail.html', {
+        'case': case, 'progress': progress,
+        'suspects_count': case.suspects.count(), 'clues_count': case.clues.count(),
+        'case_allowed': allowed, 'active_progress': active, 'lock_reason': lock_reason,
+    })
 
 
 @login_required
 def start_investigation_view(request, case_id):
-    """Starts or resumes an investigation for the authenticated detective."""
     case = get_object_or_404(Case, id=case_id)
+    allowed, active, reason = _case_access(request.user, case)
+    if not allowed:
+        messages.warning(request, reason)
+        return redirect('case_detail', case_id=case.id)
     progress, created = UserCaseProgress.objects.get_or_create(
-        user=request.user,
-        case=case,
-        defaults={'completion_status': 'In Progress'}
+        user=request.user, case=case, defaults={'completion_status': 'In Progress'}
     )
+    if progress.completion_status == 'Solved':
+        messages.info(request, 'This dossier is already closed.')
+        return redirect('case_detail', case_id=case.id)
     if created:
-        messages.success(request, f"Dossier opened: Investigation into '{case.title}' officially begun!")
+        messages.success(request, f"Case assigned: '{case.title}'. Complete it before opening another case.")
     return redirect('investigate', case_id=case.id)
 
 
 @login_required
 def investigate_view(request, case_id):
-    """
-    Main interactive investigation room:
-    Displays clues, evidence, suspects, witness testimonies, hint panel, and accusation chamber.
-    """
     case = get_object_or_404(Case, id=case_id)
-    progress, _ = UserCaseProgress.objects.get_or_create(
-        user=request.user,
-        case=case,
-        defaults={'completion_status': 'In Progress'}
-    )
-
+    progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
+    allowed, active, reason = _case_access(request.user, case)
+    if not allowed or not progress or progress.completion_status == 'Solved':
+        messages.warning(request, reason or 'Open this case from the Cases tab when it is unlocked.')
+        return redirect('case_detail', case_id=case.id)
     collected_clue_ids = progress.collected_clues.values_list('id', flat=True)
-    all_clues = case.clues.all()
-    suspects = case.suspects.all()
-    evidence_records = case.evidence_records.all().select_related('suspect', 'clue')
-    witness_statements = case.witness_statements.all()
-    latest_accusation = Accusation.objects.filter(user=request.user, case=case).order_by('-submission_date').first()
-
-    accusation_form = AccusationForm(case=case)
-
     context = {
-        'case': case,
-        'progress': progress,
+        'case': case, 'progress': progress,
         'collected_clue_ids': set(collected_clue_ids),
-        'all_clues': all_clues,
-        'suspects': suspects,
-        'evidence_records': evidence_records,
-        'witness_statements': witness_statements,
-        'latest_accusation': latest_accusation,
-        'accusation_form': accusation_form,
+        'all_clues': case.clues.all(), 'suspects': case.suspects.all(),
+        'evidence_records': case.evidence_records.all().select_related('suspect', 'clue'),
+        'witness_statements': case.witness_statements.all(),
+        'latest_accusation': Accusation.objects.filter(user=request.user, case=case).order_by('-submission_date').first(),
+        'accusation_form': AccusationForm(case=case),
     }
     return render(request, 'investigation/investigate.html', context)
 
 
 @login_required
 def collect_clue_view(request, case_id, clue_id):
-    """Collects an investigation clue and adds it to the detective's progress."""
     case = get_object_or_404(Case, id=case_id)
+    allowed, active, reason = _case_access(request.user, case)
+    progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
+    if not allowed or not progress or progress.completion_status == 'Solved':
+        return JsonResponse({'success': False, 'error': reason or 'This case is not active.'}, status=403)
     clue = get_object_or_404(Clue, id=clue_id, case=case)
-    progress, _ = UserCaseProgress.objects.get_or_create(user=request.user, case=case)
-
     if clue not in progress.collected_clues.all():
         progress.collected_clues.add(clue)
         collected = True
@@ -159,111 +185,64 @@ def collect_clue_view(request, case_id, clue_id):
     else:
         collected = False
         msg = f"Clue {clue.title} is already recorded in your notebook."
-
-    # Return JSON for AJAX fetch call or redirect for standard POST
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
-        return JsonResponse({
-            'success': True,
-            'collected': collected,
-            'message': msg,
-            'clue_id': clue.id,
-            'clue_title': clue.title,
-            'clue_type': clue.clue_type,
-            'clue_desc': clue.description,
-            'progress_percent': progress.progress_percentage,
-            'collected_count': progress.collected_clues.count(),
-            'total_count': case.clues.count(),
-        })
-
+        return JsonResponse({'success': True, 'collected': collected, 'message': msg,
+            'clue_id': clue.id, 'clue_title': clue.title, 'clue_type': clue.clue_type,
+            'clue_desc': clue.description, 'progress_percent': progress.progress_percentage,
+            'collected_count': progress.collected_clues.count(), 'total_count': case.clues.count()})
     messages.success(request, msg)
     return redirect('investigate', case_id=case.id)
 
 
 @login_required
 def get_hint_view(request, case_id):
-    """Rule-based AI hint generator endpoint."""
     case = get_object_or_404(Case, id=case_id)
-    progress, _ = UserCaseProgress.objects.get_or_create(user=request.user, case=case)
-
+    allowed, active, reason = _case_access(request.user, case)
+    progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
+    if not allowed or not progress or progress.completion_status == 'Solved':
+        return JsonResponse({'success': False, 'error': reason or 'This case is not active.'}, status=403)
     hint_data = generate_investigative_hint(case, progress.collected_clues.all())
-
-    # Increment hint tally
     progress.hints_used += 1
-    progress.save()
-
+    progress.save(update_fields=['hints_used'])
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
-        return JsonResponse({
-            'success': True,
-            'hint': hint_data['hint'],
-            'level': hint_data['level'],
-            'focus_area': hint_data['focus_area'],
-            'penalty': hint_data['penalty'],
-            'hints_used': progress.hints_used,
-        })
-
+        return JsonResponse({'success': True, 'hint': hint_data['hint'], 'level': hint_data['level'],
+            'focus_area': hint_data['focus_area'], 'penalty': hint_data['penalty'], 'hints_used': progress.hints_used})
     messages.info(request, f"AI Hint ({hint_data['level']}): {hint_data['hint']}")
     return redirect('investigate', case_id=case.id)
 
 
 @login_required
 def submit_accusation_view(request, case_id):
-    """Validates the detective's accusation against the case solution and calculates score."""
     case = get_object_or_404(Case, id=case_id)
-    progress, _ = UserCaseProgress.objects.get_or_create(user=request.user, case=case)
-
-    if request.method == 'POST':
-        form = AccusationForm(request.POST, case=case)
-        if form.is_valid():
-            selected_suspect = form.cleaned_data['selected_suspect']
-            deduction_notes = form.cleaned_data['deduction_notes']
-
-            # Check correctness against fictional culprit
-            is_correct = (selected_suspect == case.correct_suspect) or (selected_suspect.is_culprit)
-
-            # Record accusation
-            Accusation.objects.create(
-                user=request.user,
-                case=case,
-                selected_suspect=selected_suspect,
-                correctness=is_correct,
-                deduction_notes=deduction_notes
-            )
-
-            if is_correct:
-                # Calculate score
-                base = case.base_points
-                clues_bonus = progress.collected_clues.count() * 10
-                hints_penalty = progress.hints_used * 15
-                earned_score = max(50, base + clues_bonus - hints_penalty)
-
-                # Check if already solved previously to prevent repeat score exploits
-                previously_solved = (progress.completion_status == 'Solved')
-
-                progress.completion_status = 'Solved'
-                progress.score = earned_score
-                progress.completed_at = timezone.now()
-                progress.save()
-
-                if not previously_solved:
-                    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-                    profile.update_rank_and_score(additional_points=earned_score, case_solved=True)
-
-                messages.success(
-                    request,
-                    f"BRILLIANT DEDUCTION! {selected_suspect.name} has confessed to the crime! "
-                    f"You earned {earned_score} points for solving this case."
-                )
-            else:
-                progress.completion_status = 'Failed'
-                progress.save()
-                messages.error(
-                    request,
-                    f"INVESTIGATION FLAWED! {selected_suspect.name}'s alibi holds firm. "
-                    "Re-examine the evidence and clues before attempting another accusation."
-                )
-
-            return redirect('investigate', case_id=case.id)
-
+    allowed, active, reason = _case_access(request.user, case)
+    progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
+    if not allowed or not progress or progress.completion_status == 'Solved':
+        messages.warning(request, reason or 'This case is not active.')
+        return redirect('case_detail', case_id=case.id)
+    if request.method != 'POST':
+        return redirect('investigate', case_id=case.id)
+    form = AccusationForm(request.POST, case=case)
+    if not form.is_valid():
+        messages.error(request, 'Please select a valid suspect and submit your deduction.')
+        return redirect('investigate', case_id=case.id)
+    selected_suspect = form.cleaned_data['selected_suspect']
+    is_correct = selected_suspect == case.correct_suspect
+    Accusation.objects.create(user=request.user, case=case, selected_suspect=selected_suspect,
+        correctness=is_correct, deduction_notes=form.cleaned_data['deduction_notes'])
+    if is_correct:
+        earned_score = max(50, case.base_points + progress.collected_clues.count() * 10 - progress.hints_used * 15)
+        progress.completion_status = 'Solved'
+        progress.score = earned_score
+        progress.completed_at = timezone.now()
+        progress.save()
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile.update_rank_and_score(additional_points=earned_score, case_solved=True)
+        messages.success(request, f"BRILLIANT DEDUCTION! {selected_suspect.name} was the culprit. You earned {earned_score} points. Your rank is now {profile.rank}. You may select your next unlocked case.")
+    else:
+        # A wrong accusation does not release the active-case lock. The player may keep investigating.
+        progress.completion_status = 'In Progress'
+        progress.save(update_fields=['completion_status'])
+        messages.error(request, f"Incorrect accusation: {selected_suspect.name}'s alibi holds. Your current case remains active; gather more evidence and try again.")
     return redirect('investigate', case_id=case.id)
 
 
@@ -357,27 +336,22 @@ def search_page_view(request):
 
 
 @login_required
+@login_required
 def save_case_notes_view(request, case_id):
-    """Saves the detective's personal field notes and scratchpad for a case."""
     case = get_object_or_404(Case, id=case_id)
-    progress, _ = UserCaseProgress.objects.get_or_create(user=request.user, case=case)
-
-    if request.method == 'POST':
-        notes = request.POST.get('notes', '').strip()
-        progress.investigation_notes = notes
-        progress.save()
-
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
-            return JsonResponse({
-                'success': True,
-                'message': 'Field notes saved to case docket archive.',
-                'timestamp': timezone.now().strftime('%H:%M:%S UTC'),
-            })
-
-        messages.success(request, "Field notes successfully updated.")
-        return redirect('investigate', case_id=case.id)
-
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+    allowed, active, reason = _case_access(request.user, case)
+    progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
+    if not allowed or not progress or progress.completion_status == 'Solved':
+        return JsonResponse({'success': False, 'error': reason or 'This case is not active.'}, status=403)
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+    progress.investigation_notes = request.POST.get('notes', '').strip()
+    progress.save(update_fields=['investigation_notes'])
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+        return JsonResponse({'success': True, 'message': 'Field notes saved to case docket archive.',
+            'timestamp': timezone.now().strftime('%H:%M:%S UTC')})
+    messages.success(request, 'Field notes successfully updated.')
+    return redirect('investigate', case_id=case.id)
 
 
 def crime_lab_view(request):
