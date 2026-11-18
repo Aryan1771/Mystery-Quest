@@ -157,8 +157,28 @@
         </div>
     </footer>
 
+    {% if user.is_authenticated and not user.profile.has_recovery_setup %}
+    <div class="modal fade" id="recoverySetupModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content card-detective">
+        <div class="modal-header border-secondary"><h5 class="modal-title text-warning">Secure Your Detective Account</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body text-white"><p>You have not configured password recovery. Add a security question and answer to regain access if you forget your password.</p><p class="small text-warning">You can do this later from your Detective Dossier.</p></div>
+        <div class="modal-footer border-secondary"><button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Remind me later</button><a class="btn btn-gold" href="{% url 'profile' %}#account-recovery">Set up recovery</a></div>
+      </div></div>
+    </div>
+    {% endif %}
+
     <!-- Bootstrap 5 Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% if user.is_authenticated and not user.profile.has_recovery_setup %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (!sessionStorage.getItem('recoveryPromptDismissed')) {
+          const el = document.getElementById('recoverySetupModal');
+          if (el) { el.addEventListener('hidden.bs.modal', function () { sessionStorage.setItem('recoveryPromptDismissed', '1'); }); bootstrap.Modal.getOrCreateInstance(el).show(); }
+        }
+      });
+    </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>
