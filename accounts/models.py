@@ -29,36 +29,27 @@ class UserProfile(models.Model):
         return f"{self.user.username} - {self.rank} ({self.total_score} pts)"
 
     def update_rank_and_score(self, additional_points=0, case_solved=False):
-        """Calculates and updates score, solved cases, and rank."""
         if additional_points:
             self.total_score += additional_points
         if case_solved:
             self.cases_solved += 1
 
         if self.total_score >= 800:
-            self.rank = 'Master Detective'
-            self.badge_level = 'Platinum'
+            self.rank, self.badge_level = 'Master Detective', 'Platinum'
         elif self.total_score >= 500:
-            self.rank = 'Chief Inspector'
-            self.badge_level = 'Gold'
+            self.rank, self.badge_level = 'Chief Inspector', 'Gold'
         elif self.total_score >= 250:
-            self.rank = 'Senior Investigator'
-            self.badge_level = 'Silver'
+            self.rank, self.badge_level = 'Senior Investigator', 'Silver'
         elif self.total_score >= 100:
-            self.rank = 'Junior Detective'
-            self.badge_level = 'Bronze'
+            self.rank, self.badge_level = 'Junior Detective', 'Bronze'
         else:
-            self.rank = 'Rookie Sleuth'
-            self.badge_level = 'Cadet'
-
+            self.rank, self.badge_level = 'Rookie Sleuth', 'Cadet'
         self.save()
 
 
 @receiver(post_save, sender=User)
 def create_or_save_user_profile(sender, instance, created, **kwargs):
-    """Automatically create UserProfile when a User is created."""
-    if created:
-        UserProfile.objects.create(user=instance)
-    else:
-        if hasattr(instance, 'profile'):
-            instance.profile.save()
+    """Ensure users have a profile; get_or_create is safe for repeated saves."""
+    profile, profile_created = UserProfile.objects.get_or_create(user=instance)
+    if not profile_created and not created:
+        profile.save()
