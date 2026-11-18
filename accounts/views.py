@@ -1,7 +1,10 @@
+from django.db import transaction
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 from .forms import UserRegistrationForm, UserLoginForm, UserProfileUpdateForm
 from .models import UserProfile
 from investigation.models import UserCaseProgress, Accusation
@@ -14,11 +17,15 @@ def register_view(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            messages.success(request, f"Welcome to Mystery Quest, Detective {user.username}! Your badge has been issued. Log in to commence duty.")
+            # Avoid leaving a user row behind if profile creation fails.
+            with transaction.atomic():
+                user = form.save()
+            messages.success(
+                request,
+                f"Welcome to Mystery Quest, Detective {user.username}! Your badge has been issued. Log in to commence duty."
+            )
             return redirect('login')
-        else:
-            messages.error(request, "Registration failed. Please check the details entered below.")
+        messages.error(request, "Registration failed. Please check the details entered below.")
     else:
         form = UserRegistrationForm()
 
@@ -33,12 +40,20 @@ def login_view(request):
         form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            # Restore a missing profile for older accounts without changing existing stats.
+            UserProfile.objects.get_or_create(user=user)
             login(request, user)
             messages.success(request, f"Access granted. Welcome back, Detective {user.username}.")
-            next_url = request.GET.get('next', 'home')
+
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if not url_has_allowed_host_and_scheme(
+                next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                next_url = settings.LOGIN_REDIRECT_URL
             return redirect(next_url)
-        else:
-            messages.error(request, "Invalid detective credentials. Access denied.")
+        messages.error(request, "Invalid detective credentials. Access denied.")
     else:
         form = UserLoginForm()
 
@@ -66,11 +81,9 @@ def profile_view(request):
 
     user_progresses = UserCaseProgress.objects.filter(user=request.user).select_related('case')
     accusations = Accusation.objects.filter(user=request.user).select_related('case', 'selected_suspect')
-
-    context = {
+    return render(request, 'accounts/profile.html', {
         'profile': profile,
         'form': form,
         'user_progresses': user_progresses,
         'accusations': accusations,
-    }
-    return render(request, 'accounts/profile.html', context)
+    })
