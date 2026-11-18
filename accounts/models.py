@@ -13,12 +13,26 @@ class UserProfile(models.Model):
         ('Master Detective', 'Master Detective'),
     ]
 
+    SECURITY_QUESTION_CHOICES = [
+        ('first_school', 'What was the name of your first school?'),
+        ('childhood_friend', 'What was the first name of your childhood best friend?'),
+        ('birth_city', 'In which city were you born?'),
+        ('favorite_teacher', 'What was the surname of a favorite teacher?'),
+        ('memorable_place', 'What was the name of a memorable place from your childhood?'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     total_score = models.IntegerField(default=0)
     rank = models.CharField(max_length=50, choices=RANK_CHOICES, default='Rookie Sleuth')
     cases_solved = models.IntegerField(default=0)
     bio = models.TextField(blank=True, default="Specialized in fictional mystery investigations and deductive reasoning.")
     badge_level = models.CharField(max_length=20, default='Bronze')
+    security_question = models.CharField(max_length=32, choices=SECURITY_QUESTION_CHOICES, blank=True, default='')
+    security_answer_hash = models.CharField(max_length=128, blank=True, default='')
+
+    @property
+    def has_recovery_setup(self):
+        return bool(self.security_question and self.security_answer_hash)
 
     class Meta:
         ordering = ['-total_score', '-cases_solved']
