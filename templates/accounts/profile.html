@@ -148,13 +148,22 @@
             </div>
         </div>
 
-        <!-- Right: Bio & Profile Settings -->\n        <div class="col-lg-4">\n            <div class="card card-detective p-4 mb-4" id="account-recovery">\n                <h5 class="text-warning fw-bold mb-2"><i class="bi bi-shield-lock me-2"></i>ACCOUNT RECOVERY</h5>\n                <p class="text-white small">Set a security question and answer for password recovery. Your answer is stored as a secure hash.</p>\n                <form method="POST">{% csrf_token %}<input type="hidden" name="form_type" value="security">\n                    {% for field in security_form %}<div class="mb-3"><label class="form-label text-light small fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}</div>{% endfor %}\n                    <button type="submit" class="btn btn-gold btn-sm w-100">{% if profile.has_recovery_setup %}Update recovery question{% else %}Save recovery question{% endif %}</button>\n                </form>\n            </div>
+        <!-- Right: Bio & Profile Settings -->
         <div class="col-lg-4">
+            <div class="card card-detective p-4 mb-4" id="account-recovery">
+                <h5 class="text-warning fw-bold mb-2"><i class="bi bi-shield-lock me-2"></i>ACCOUNT RECOVERY</h5>
+                <p class="text-white small">Set a security question and answer for password recovery. Your answer is stored as a secure hash.</p>
+                <form method="POST">{% csrf_token %}<input type="hidden" name="form_type" value="security">
+                    {% for field in security_form %}<div class="mb-3"><label class="form-label text-light small fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+                    <button type="submit" class="btn btn-gold btn-sm w-100">{% if profile.has_recovery_setup %}Update recovery question{% else %}Save recovery question{% endif %}</button>
+                </form>
+            </div>
             <div class="card card-detective p-4 mb-4">
                 <h5 class="text-light fw-bold mb-3" style="font-family: 'Cinzel', serif;">
                     <i class="bi bi-pencil-square text-warning me-2"></i> UPDATE DOSSIER BIO
                 </h5>
-                <form method="POST">\n                    <input type="hidden" name="form_type" value="bio">
+                <form method="POST">
+                    <input type="hidden" name="form_type" value="bio">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label text-light small fw-bold">Detective Specialization / Bio</label>
