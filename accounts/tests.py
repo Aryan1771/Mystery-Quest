@@ -67,7 +67,7 @@ class AccountTests(TestCase):
             response = self.client.post(reverse('password_reset'), {'email': self.user.email})
             self.assertRedirects(response, reverse('password_reset_done'))
             self.assertEqual(len(mail.outbox), 1)
-            self.assertIn('password-reset', mail.outbox[0].subject.lower())
+            self.assertIn('password reset', mail.outbox[0].subject.lower())
 
             uid = urlsafe_base64_encode(force_bytes(self.user.pk))
             token = default_token_generator.make_token(self.user)
