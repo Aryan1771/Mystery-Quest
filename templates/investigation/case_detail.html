@@ -84,6 +84,7 @@
             </div>
 
             <!-- Suspects Preview -->
+            {% if case_allowed %}
             <div class="card card-detective p-4">
                 <h6 class="text-warning text-uppercase fw-bold mb-3">Prime Suspects on File</h6>
                 <div class="list-group list-group-flush bg-transparent">
@@ -104,6 +105,9 @@
                     {% endfor %}
                 </div>
             </div>
+            {% else %}
+            <div class="card card-detective p-4"><h6 class="text-warning text-uppercase fw-bold">Restricted intelligence</h6><p class="text-white small mb-0">Suspect profiles, clues and evidence are sealed until this case is assigned to you.</p></div>
+            {% endif %}
         </div>
     </div>
 </div>
