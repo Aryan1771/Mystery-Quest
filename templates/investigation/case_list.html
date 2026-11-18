@@ -47,6 +47,19 @@
         </form>
     </div>
 
+    {% if user.is_authenticated %}
+    <div class="alert alert-info border-secondary mb-4">
+        <strong>{{ player_profile.rank }}</strong> · Your rank determines which dossiers you can unlock.
+        {% if active_progress %}
+        <div class="mt-1">Active investigation: <strong>{{ active_progress.case.title }}</strong>. Complete it before opening another case.</div>
+        {% else %}
+        <div class="mt-1">Choose one unlocked case to begin. Other dossiers remain previews until you qualify.</div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-info border-secondary mb-4">Browse case previews. Log in to unlock and play investigations.</div>
+    {% endif %}
+
     <!-- Case Cards Grid -->
     <div class="row g-4">
         {% for item in cases_with_status %}
@@ -65,6 +78,8 @@
                         {% else %}
                             <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> In Progress</span>
                         {% endif %}
+                    {% elif item.locked %}
+                        <span class="badge bg-secondary"><i class="bi bi-lock-fill"></i> Locked</span>
                     {% else %}
                         <span class="badge bg-dark border border-secondary text-white">Unopened</span>
                     {% endif %}
@@ -92,14 +107,15 @@
                         </div>
 
                         <div class="d-grid gap-2">
-                            {% if item.progress %}
-                                <a href="{% url 'investigate' item.case.id %}" class="btn btn-gold btn-sm">
-                                    <i class="bi bi-door-open-fill me-1"></i> Enter Crime Room
-                                </a>
+                            {% if item.progress and item.progress.completion_status != 'Solved' and item.playable %}
+                                <a href="{% url 'investigate' item.case.id %}" class="btn btn-gold btn-sm">Continue Active Case</a>
+                            {% elif item.playable and not item.progress %}
+                                <a href="{% url 'case_detail' item.case.id %}" class="btn btn-outline-gold btn-sm">Preview & Select Case</a>
+                            {% elif item.progress and item.progress.completion_status == 'Solved' %}
+                                <a href="{% url 'case_detail' item.case.id %}" class="btn btn-outline-secondary btn-sm">Solved · View Dossier</a>
                             {% else %}
-                                <a href="{% url 'case_detail' item.case.id %}" class="btn btn-outline-gold btn-sm">
-                                    <i class="bi bi-folder2-open me-1"></i> Inspect Case Brief
-                                </a>
+                                <a href="{% url 'case_detail' item.case.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock-fill me-1"></i> Preview Locked Case</a>
+                                <small class="text-warning">{{ item.lock_reason }}</small>
                             {% endif %}
                         </div>
                     </div>
