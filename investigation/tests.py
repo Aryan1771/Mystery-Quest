@@ -238,6 +238,7 @@ class InvestigationSystemTests(TestCase):
     def test_reportlab_pdf_generation(self):
         """Tests server-side PDF generation via ReportLab."""
         self.client.login(username='watson', password='WatsonPassword123')
+        UserCaseProgress.objects.get_or_create(user=self.detective, case=self.case)
         response = self.client.get(f'/case/{self.case.id}/report/pdf/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
