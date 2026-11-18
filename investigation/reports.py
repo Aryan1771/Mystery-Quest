@@ -1,6 +1,6 @@
 import io
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -21,6 +21,12 @@ def generate_case_pdf(request, case_id):
     """
     case = get_object_or_404(Case, id=case_id)
     progress = UserCaseProgress.objects.filter(user=request.user, case=case).first()
+    active_progress = UserCaseProgress.objects.filter(user=request.user).exclude(
+        completion_status='Solved'
+    ).order_by('started_at').first()
+    if not progress or (progress.completion_status != 'Solved' and
+                        (not active_progress or active_progress.case_id != case.id)):
+        return HttpResponseForbidden("This dossier is not assigned to your detective account.")
     accusation = Accusation.objects.filter(user=request.user, case=case).order_by('-submission_date').first()
 
     buffer = io.BytesIO()
