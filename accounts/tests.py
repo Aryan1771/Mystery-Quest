@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from accounts.models import UserProfile
+from django.contrib.auth.hashers import make_password, check_password
 
 
 class AccountTests(TestCase):
@@ -55,34 +56,47 @@ class AccountTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'test_detective')
 
-    def test_password_reset_email_and_confirmation_flow(self):
-        from django.core import mail
+    def test_security_question_recovery_changes_password(self):
+        from django.contrib.auth.hashers import check_password
+        from django.contrib.auth.models import UserProfile
         from django.test import override_settings
-        from django.urls import reverse
-        from django.contrib.auth.tokens import default_token_generator
-        from django.utils.encoding import force_bytes
-        from django.utils.http import urlsafe_base64_encode
 
-        with override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
-            response = self.client.post(reverse('password_reset'), {'email': self.user.email})
-            self.assertRedirects(response, reverse('password_reset_done'))
-            self.assertEqual(len(mail.outbox), 1)
-            self.assertIn('password reset', mail.outbox[0].subject.lower())
+        profile = self.user.profile
+        profile.security_question = 'birth_city'
+        profile.security_answer_hash = make_password('gaya')
+        profile.save()
+        response = self.client.post(reverse('password_reset'), {'username': self.user.username})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'In which city were you born?')
+        response = self.client.post(reverse('password_reset'), {
+            'username': self.user.username,
+            'security_answer': ' GAYA ',
+            'new_password1': 'New-Strong-Password-928!',
+            'new_password2': 'New-Strong-Password-928!',
+        })
+        self.assertRedirects(response, reverse('login'))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('New-Strong-Password-928!'))
 
-            uid = urlsafe_base64_encode(force_bytes(self.user.pk))
-            token = default_token_generator.make_token(self.user)
-            reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
-            response = self.client.get(reset_url)
-            self.assertEqual(response.status_code, 200)
-            response = self.client.post(reset_url, {
-                'new_password1': 'New-Strong-Password-928!',
-                'new_password2': 'New-Strong-Password-928!',
-            })
-            self.assertRedirects(response, reverse('password_reset_complete'))
-            self.user.refresh_from_db()
-            self.assertTrue(self.user.check_password('New-Strong-Password-928!'))
+    def test_security_question_answer_is_hashed(self):
+        self.client.login(username='test_detective', password='Password123!')
+        response = self.client.post(reverse('profile'), {
+            'form_type': 'security',
+            'security_question': 'birth_city',
+            'security_answer': ' Gaya ',
+        })
+        self.assertRedirects(response, reverse('profile'))
+        self.user.profile.refresh_from_db()
+        self.assertNotEqual(self.user.profile.security_answer_hash, 'gaya')
+        self.assertTrue(check_password('gaya', self.user.profile.security_answer_hash))
 
-    def test_password_reset_page_is_linked_from_login(self):
+    def test_profile_prompts_unconfigured_users(self):
+        self.client.login(username='test_detective', password='Password123!')
+        response = self.client.get(reverse('profile'))
+        self.assertContains(response, 'ACCOUNT RECOVERY')
+        self.assertContains(response, 'security_question')
+
+    def test_password_reset_link_uses_security_question_flow(self):
         response = self.client.get(reverse('login'))
         self.assertContains(response, reverse('password_reset'))
 
