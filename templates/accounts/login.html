@@ -17,33 +17,30 @@
 
                 <form method="POST">
                     {% csrf_token %}
-
+                    {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
+                    {% endif %}
                     <div class="mb-3">
-                        <label class="form-label text-light small fw-bold">Detective Handle</label>
+                        <label class="form-label text-light small fw-bold" for="{{ form.username.id_for_label }}">Detective Handle</label>
                         {{ form.username }}
                         {% if form.username.errors %}
                             <div class="text-danger small mt-1">{% for err in form.username.errors %}{{ err }}{% endfor %}</div>
                         {% endif %}
                     </div>
-
                     <div class="mb-4">
-                        <label class="form-label text-light small fw-bold">Secret Passkey</label>
+                        <label class="form-label text-light small fw-bold" for="{{ form.password.id_for_label }}">Secret Passkey</label>
                         {{ form.password }}
                         {% if form.password.errors %}
                             <div class="text-danger small mt-1">{% for err in form.password.errors %}{{ err }}{% endfor %}</div>
                         {% endif %}
                     </div>
-
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger small" role="alert">{{ form.non_field_errors }}</div>
+                    {% endif %}
                     <button type="submit" class="btn btn-gold w-100 py-2 fw-bold">
                         <i class="bi bi-box-arrow-in-right me-1"></i> Access Investigation Board
                     </button>
                 </form>
-
-                <div class="alert alert-dark border-secondary small mt-4 mb-0 text-white">
-                    <i class="bi bi-info-circle text-warning me-1"></i> Demo credentials:<br>
-                    • Admin: <code>admin</code> / <code>admin123</code><br>
-                    • Detective: <code>vansh123</code> / <code>vansh123</code> (or <code>detective123</code>)
-                </div>
 
                 <div class="text-center mt-4 pt-3 border-top border-secondary border-opacity-25">
                     <span class="text-white small">New to Mystery Quest?</span>
