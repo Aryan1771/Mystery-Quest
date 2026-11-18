@@ -31,7 +31,7 @@ class InvestigationSystemTests(TestCase):
             title="The Stolen Amber Necklace",
             description="A valuable antique necklace vanished from the museum vault.",
             background="The museum gallery was closed at 6 PM. At 7:30 PM, the glass display was broken.",
-            difficulty="Medium",
+            difficulty="Easy",
             status="Active",
             solution_explanation="The curator staged the theft using a pre-duplicated key."
         )
@@ -108,6 +108,37 @@ class InvestigationSystemTests(TestCase):
         progress = UserCaseProgress.objects.filter(user=self.detective, case=self.case).first()
         self.assertIsNotNone(progress)
         self.assertEqual(progress.completion_status, 'In Progress')
+
+    def test_single_active_case_and_rank_unlocks(self):
+        self.client.login(username='watson', password='WatsonPassword123')
+        locked_case = Case.objects.create(
+            title="The Locked Observatory",
+            description="A telescope disappears.",
+            background="The observatory was sealed overnight.",
+            difficulty="Medium",
+            solution_explanation="The technician hid it."
+        )
+        self.assertEqual(self.client.get(f'/case/{self.case.id}/start/').status_code, 302)
+        active = UserCaseProgress.objects.get(user=self.detective, case=self.case)
+        self.assertEqual(active.completion_status, 'In Progress')
+
+        # A second case is previewable but cannot be started while the first is active.
+        response = self.client.get(f'/case/{locked_case.id}/')
+        self.assertContains(response, 'Complete your active case')
+        self.client.get(f'/case/{locked_case.id}/start/')
+        self.assertFalse(UserCaseProgress.objects.filter(user=self.detective, case=locked_case).exists())
+        self.assertEqual(self.client.get(f'/case/{locked_case.id}/investigate/').status_code, 302)
+
+        # Solving the Easy case promotes the detective to Junior and unlocks Medium.
+        response = self.client.post(f'/case/{self.case.id}/accuse/', {
+            'selected_suspect': self.guilty_suspect.id,
+            'deduction_notes': 'The evidence points to the curator.'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.detective.profile.refresh_from_db()
+        self.assertEqual(self.detective.profile.rank, 'Junior Detective')
+        response = self.client.get(f'/case/{locked_case.id}/')
+        self.assertContains(response, 'Select This Case')
 
     def test_clue_collection_standard_and_ajax(self):
         """Tests clue collection via both standard request and AJAX Fetch API."""
