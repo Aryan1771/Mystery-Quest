@@ -1,0 +1,3 @@
+[tool.vercel.scripts]
+# Run safe, additive Django schema migrations against the deployment database.
+build = "python manage.py migrate --noinput --fake-initial"
